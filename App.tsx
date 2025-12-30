@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import Layout from './components/Layout';
+import Layout from './components/MainLayout';
 import Dashboard from './components/Dashboard';
 import CRM from './components/CRM';
 import Finance from './components/Finance';
