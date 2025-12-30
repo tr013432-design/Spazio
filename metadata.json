@@ -1,0 +1,8 @@
+{
+  "name": "ArchiFlow - Arquitetura & Design Management",
+  "description": "Uma plataforma completa de CRM e gestão financeira para escritórios de arquitetura, eliminando planilhas e centralizando o controle de leads, projetos e finanças.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
