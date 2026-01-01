@@ -1,43 +1,49 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, SchemaType } from "@google/genai";
 
-// Serviço de Inteligência Artificial do ArchiFlow
 export const geminiService = {
   async analyzeBriefing(briefing: string) {
-    const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
-    const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
-      contents: `Analise o seguinte briefing de arquitetura/design e forneça 3 sugestões de estilo, uma lista de materiais recomendados e um resumo do perfil do cliente. Briefing: ${briefing}`,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            styles: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
-              description: "3 sugestões de estilo de design"
+    try {
+      const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+      const response = await ai.models.generateContent({
+        model: "gemini-1.5-flash",
+        contents: `Analise o seguinte briefing de arquitetura/design e forneça 3 sugestões de estilo, uma lista de materiais recomendados e um resumo do perfil do cliente. Briefing: ${briefing}`,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: SchemaType.OBJECT,
+            properties: {
+              styles: {
+                type: SchemaType.ARRAY,
+                items: { type: SchemaType.STRING },
+                description: "3 sugestões de estilo de design"
+              },
+              materials: {
+                type: SchemaType.ARRAY,
+                items: { type: SchemaType.STRING },
+                description: "Lista de materiais recomendados"
+              },
+              profileSummary: {
+                type: SchemaType.STRING,
+                description: "Resumo do perfil do cliente"
+              }
             },
-            materials: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
-              description: "Lista de materiais recomendados"
-            },
-            profileSummary: {
-              type: Type.STRING,
-              description: "Resumo do perfil do cliente"
-            }
-          },
-          required: ["styles", "materials", "profileSummary"]
+            required: ["styles", "materials", "profileSummary"]
+          }
         }
-      }
-    });
-    return JSON.parse(response.text() || '{}');
+      });
+      // Tratamento extra para garantir que o JSON venha limpo
+      const text = response.text();
+      return JSON.parse(text || '{}');
+    } catch (error) {
+      console.error("Erro AI Briefing:", error);
+      throw error;
+    }
   },
 
   async generateFollowUpMessage(leadName: string, status: string) {
     const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: "gemini-1.5-flash",
       contents: `Escreva uma mensagem de WhatsApp para o cliente ${leadName} que está no estágio "${status}". 
       O tom deve ser EXTREMAMENTE persuasivo, elegante e "agressivo" no sentido de exclusividade e urgência velada. 
       Foque na transformação de vida e no valor emocional do projeto. Estilo: Proximidade e Autoridade.`,
@@ -48,7 +54,7 @@ export const geminiService = {
   async generateProposal(leadName: string, notes: string, budget?: number) {
     const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: "gemini-1.5-flash",
       contents: `Você é um arquiteto renomado com alto poder de fechamento. 
       Gere uma estrutura de proposta comercial persuasiva para ${leadName} baseada nas seguintes notas: "${notes}".
       ${budget ? `O investimento estimado discutido foi de R$ ${budget.toLocaleString('pt-BR')}.` : ''}
@@ -66,7 +72,7 @@ export const geminiService = {
   async analyzeRegulatoryDocs(context: string, query: string) {
     const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: "gemini-1.5-flash",
       contents: `Você é um consultor técnico de arquitetura e urbanismo. 
       Baseado no texto normativo fornecido abaixo, responda à seguinte dúvida: "${query}"
       
@@ -79,9 +85,6 @@ export const geminiService = {
   },
 
   async generateMoodboard(prompt: string) {
-    const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
-    // Nota: Para geração de imagens, futuramente usaremos um modelo específico. 
-    // Por enquanto, o Gemini retorna descrições textuais detalhadas para o moodboard.
     return null; 
   }
 };
