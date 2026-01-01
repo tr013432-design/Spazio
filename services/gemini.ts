@@ -1,88 +1,64 @@
-import { GoogleGenAI, Type } from "@google/genai";
+// --- CONFIGURAÇÃO MANUAL (SEM BIBLIOTECA) ---
+const API_KEY = "AIzaSyAJh4Y1EYYwpVmXz4KWRCMGlWjir567hdo"; 
+// ^^^ COLOCAR SUA CHAVE AIza... DENTRO DAS ASPAS ACIMA ^^^
+
+const BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+
+async function callGeminiAPI(prompt: string, isJson: boolean = false) {
+  if (API_KEY === "AIzaSyAJh4Y1EYYwpVmXz4KWRCMGlWjir567hdo" || !API_KEY) {
+    throw new Error("Chave API não configurada no arquivo gemini.ts");
+  }
+
+  const requestBody = {
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: {
+      // Se for JSON, forçamos o formato. Se não, é texto livre.
+      responseMimeType: isJson ? "application/json" : "text/plain"
+    }
+  };
+
+  const response = await fetch(`${BASE_URL}?key=${API_KEY}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(requestBody)
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error("ERRO DETALHADO DA API:", errorData);
+    throw new Error(`Erro na API Google: ${response.status} - ${errorData.error?.message || 'Erro desconhecido'}`);
+  }
+
+  const data = await response.json();
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  
+  if (!text) throw new Error("A IA não retornou nenhum texto.");
+
+  return isJson ? JSON.parse(text) : text;
+}
 
 export const geminiService = {
   async analyzeBriefing(briefing: string) {
-    try {
-      const ai = new GoogleGenAI({ apiKey: "AIzaSyAJh4Y1EYYwpVmXz4KWRCMGlWjir567hdo" });
-      const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
-        contents: `Analise o seguinte briefing de arquitetura/design e forneça 3 sugestões de estilo, uma lista de materiais recomendados e um resumo do perfil do cliente. Briefing: ${briefing}`,
-        config: {
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              styles: {
-                type: Type.ARRAY,
-                items: { type: Type.STRING },
-                description: "3 sugestões de estilo de design"
-              },
-              materials: {
-                type: Type.ARRAY,
-                items: { type: Type.STRING },
-                description: "Lista de materiais recomendados"
-              },
-              profileSummary: {
-                type: Type.STRING,
-                description: "Resumo do perfil do cliente"
-              }
-            },
-            required: ["styles", "materials", "profileSummary"]
-          }
-        }
-      });
-      return JSON.parse(response.text() || '{}');
-    } catch (error) {
-      console.error("Erro AI Briefing:", error);
-      throw error;
-    }
+    const prompt = `Analise o seguinte briefing de arquitetura/design e retorne APENAS um JSON (sem markdown) com as propriedades: styles (lista de 3 estilos), materials (lista de materiais), profileSummary (resumo do cliente). Briefing: ${briefing}`;
+    return callGeminiAPI(prompt, true);
   },
 
   async generateFollowUpMessage(leadName: string, status: string) {
-    const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
-    const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
-      contents: `Escreva uma mensagem de WhatsApp para o cliente ${leadName} que está no estágio "${status}". 
-      O tom deve ser EXTREMAMENTE persuasivo, elegante e "agressivo" no sentido de exclusividade e urgência velada. 
-      Foque na transformação de vida e no valor emocional do projeto. Estilo: Proximidade e Autoridade.`,
-    });
-    return response.text();
+    const prompt = `Escreva uma mensagem de WhatsApp para o cliente ${leadName} que está no estágio "${status}". O tom deve ser persuasivo, elegante e focado em urgência velada. Apenas o texto da mensagem.`;
+    return callGeminiAPI(prompt, false);
   },
 
   async generateProposal(leadName: string, notes: string, budget?: number) {
-    const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
-    const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
-      contents: `Você é um arquiteto renomado com alto poder de fechamento. 
-      Gere uma estrutura de proposta comercial persuasiva para ${leadName} baseada nas seguintes notas: "${notes}".
-      ${budget ? `O investimento estimado discutido foi de R$ ${budget.toLocaleString('pt-BR')}.` : ''}
-      
-      A proposta deve seguir este roteiro:
-      1. O SONHO: Validação emocional.
-      2. O DIAGNÓSTICO: Problemas técnicos e estéticos.
-      3. A SOLUÇÃO EXCLUSIVA: Sua abordagem única.
-      4. ETAPAS DA JORNADA: Processo de trabalho.
-      5. O PRÓXIMO PASSO: CTA forte.`,
-    });
-    return response.text();
+    const prompt = `Você é um arquiteto. Gere uma proposta comercial para ${leadName}. Notas: "${notes}". ${budget ? `Orçamento: R$ ${budget}` : ''}. Estruture com: 1. O Sonho, 2. O Diagnóstico, 3. A Solução, 4. Próximos Passos.`;
+    return callGeminiAPI(prompt, false);
   },
 
   async analyzeRegulatoryDocs(context: string, query: string) {
-    const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
-    const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
-      contents: `Você é um consultor técnico de arquitetura e urbanismo. 
-      Baseado no texto normativo fornecido abaixo, responda à seguinte dúvida: "${query}"
-      
-      Texto Normativo/Plano Diretor:
-      ${context}
-      
-      Responda de forma técnica, citando possíveis artigos ou diretrizes mencionados no texto. Seja direto e preciso.`,
-    });
-    return response.text();
+    const prompt = `Você é um consultor técnico. Baseado neste texto normativo: "${context}". Responda a dúvida: "${query}". Seja técnico e direto.`;
+    return callGeminiAPI(prompt, false);
   },
 
   async generateMoodboard(prompt: string) {
-    return null; 
+    return null; // Imagem desativada temporariamente
   }
 };
