@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import Layout from './components/MainLayout';
 import Dashboard from './components/Dashboard';
-// import CRM from './components/CRM';       <-- Desligado temporariamente
-// import Finance from './components/Finance'; <-- Desligado temporariamente
-// import Projects from './components/Projects'; <-- Desligado temporariamente
+import CRM from './components/CRM';
+import Finance from './components/Finance';
+import Projects from './components/Projects';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -11,9 +11,9 @@ const App: React.FC = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard': return <Dashboard />;
-      // case 'crm': return <CRM />;
-      // case 'projects': return <Projects />;
-      // case 'finance': return <Finance />;
+      case 'crm': return <CRM />;
+      case 'projects': return <Projects />;
+      case 'finance': return <Finance />;
       default: return <Dashboard />;
     }
   };
