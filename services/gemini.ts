@@ -1,28 +1,9 @@
 // ARQUIVO NEUTRO DE SEGURANÇA
-// Isso impede que o site quebre por causa da IA.
-
+// Garante que o CRM carregue mesmo sem IA.
 export const geminiService = {
-  async analyzeBriefing(briefing: string) {
-    return {
-      styles: ["Clássico", "Moderno", "Industrial"],
-      materials: ["Madeira", "Vidro", "Concreto"],
-      profileSummary: "Funcionalidade de IA desativada temporariamente."
-    };
-  },
-
-  async generateFollowUpMessage(leadName: string, status: string) {
-    return "O sistema de IA está desativado no momento. Prossiga manualmente.";
-  },
-
-  async generateProposal(leadName: string, notes: string, budget?: number) {
-    return "O sistema de IA está desativado no momento. Prossiga manualmente.";
-  },
-
-  async analyzeRegulatoryDocs(context: string, query: string) {
-    return "IA Offline.";
-  },
-
-  async generateMoodboard(prompt: string) {
-    return null; 
-  }
+  async analyzeBriefing() { return {}; },
+  async generateFollowUpMessage() { return "IA Desativada."; },
+  async generateProposal() { return "IA Desativada."; },
+  async analyzeRegulatoryDocs() { return "IA Desativada."; },
+  async generateMoodboard() { return null; }
 };
