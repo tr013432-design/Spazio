@@ -1,11 +1,10 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Layout from './components/MainLayout';
 import Dashboard from './components/Dashboard';
 import CRM from './components/CRM';
 import Finance from './components/Finance';
-import AIWorkspace from './components/AIWorkspace';
 import Projects from './components/Projects';
+// A importação do AIWorkspace foi removida
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -16,7 +15,7 @@ const App: React.FC = () => {
       case 'crm': return <CRM />;
       case 'projects': return <Projects />;
       case 'finance': return <Finance />;
-      case 'ai': return <AIWorkspace />;
+      // Caso 'ai' removido para evitar erros
       default: return <Dashboard />;
     }
   };
