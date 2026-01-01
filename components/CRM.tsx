@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Lead, LeadStatus, Task } from '../types';
 import { Icons } from '../constants';
@@ -49,15 +50,13 @@ const initialLeads: Lead[] = [
 ];
 
 const CRM: React.FC = () => {
-  // --- MODIFICAÇÃO JARVIS: INÍCIO ---
+// --- MODIFICAÇÃO JARVIS: INÍCIO ---
   // Carrega leads salvos no navegador. Se não houver, usa a lista inicial de exemplo.
   const [leads, setLeads] = useState<Lead[]>(() => {
     const savedLeads = localStorage.getItem('archiflow_leads');
     if (savedLeads) {
       try {
-        const parsedLeads = JSON.parse(savedLeads);
-        // Garante que tasks existe para evitar erro
-        return parsedLeads.map((lead: any) => ({ ...lead, tasks: lead.tasks || [] }));
+        return JSON.parse(savedLeads);
       } catch (e) {
         console.error("Erro ao carregar dados salvos:", e);
         return initialLeads;
@@ -70,10 +69,7 @@ const CRM: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('archiflow_leads', JSON.stringify(leads));
   }, [leads]);
-  // --- MODIFICAÇÃO JARVIS: FIM ---
-
-  // AGORA ESTÁ NA LINHA DE BAIXO (CORRETO):
-  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
+  // --- MODIFICAÇÃO JARVIS: FIM ---  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [isEditingLead, setIsEditingLead] = useState(false);
   const [editFormData, setEditFormData] = useState<Partial<Lead>>({});
   
@@ -338,7 +334,7 @@ const CRM: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-2 mb-3">
-                        <span className="text-[9px] font-black text-stone-400 uppercase tracking-widest bg-stone-50 px-2.5 py-1 rounded border border-stone-100">
+                       <span className="text-[9px] font-black text-stone-400 uppercase tracking-widest bg-stone-50 px-2.5 py-1 rounded border border-stone-100">
                         {lead.source}
                       </span>
                       {lead.budget && (
@@ -676,10 +672,10 @@ const CRM: React.FC = () => {
                   <input type="number" value={formData.budget} onChange={e => setFormData({...formData, budget: e.target.value})} className="w-full px-5 py-4 bg-stone-50 border-2 border-stone-100 rounded-2xl outline-none focus:ring-4 focus:ring-stone-900/5 focus:border-stone-900 transition-all" placeholder="Ex: 250000" />
                 </div>
                 <div className="space-y-2">
-                    <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Fase Inicial</label>
-                    <div className="w-full px-5 py-4 bg-stone-100 border-2 border-stone-100 rounded-2xl text-stone-500 text-sm font-black uppercase tracking-widest flex items-center">
-                      {LeadStatus.PROSPECTION}
-                    </div>
+                   <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest ml-1">Fase Inicial</label>
+                   <div className="w-full px-5 py-4 bg-stone-100 border-2 border-stone-100 rounded-2xl text-stone-500 text-sm font-black uppercase tracking-widest flex items-center">
+                     {LeadStatus.PROSPECTION}
+                   </div>
                 </div>
               </div>
               <div className="space-y-2">
