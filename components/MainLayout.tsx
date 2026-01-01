@@ -1,17 +1,59 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Icons } from '../constants';
 
-// Layout Simplificado - Sem Ícones, Sem Lógica Complexa
-const Layout = ({ children, activeTab, setActiveTab }: any) => {
+interface LayoutProps {
+  children: React.ReactNode;
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+}
+
+const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  const menuItems = [
+    { id: 'dashboard', label: 'Início', icon: <Icons.Dashboard /> },
+    { id: 'crm', label: 'CRM', icon: <Icons.Briefcase /> },
+    { id: 'projects', label: 'Projetos', icon: <Icons.Folder /> },
+    { id: 'finance', label: 'Financeiro', icon: <Icons.Dollar /> },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col font-sans text-gray-900">
-      <header className="bg-black text-white p-6 flex justify-between items-center">
-        <h1 className="text-xl font-bold">ARCHIFLOW - MODO SEGURANÇA</h1>
-        <nav className="flex gap-4 text-sm font-bold">
-          <button onClick={() => setActiveTab('dashboard')} className="hover:text-gray-300">DASHBOARD</button>
-          <button onClick={() => setActiveTab('crm')} className="hover:text-gray-300">CRM</button>
+    <div className="min-h-screen bg-[#FDFBF7] flex font-sans text-stone-800">
+      <aside className={`${isSidebarOpen ? 'w-72' : 'w-24'} bg-[#0C0C0C] text-white transition-all duration-500 ease-out flex flex-col fixed h-full z-50 shadow-2xl`}>
+        <div className="p-8 flex items-center gap-4">
+          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shrink-0">
+             <div className="w-6 h-6 border-4 border-[#0C0C0C] border-t-transparent rounded-full"></div>
+          </div>
+          {isSidebarOpen && (
+            <div>
+              <h1 className="text-xl font-bold tracking-tighter leading-none">ARCHI<span className="font-light text-stone-400">FLOW</span></h1>
+              <p className="text-[9px] text-stone-500 tracking-[0.2em] font-bold mt-1">ELITE MANAGEMENT</p>
+            </div>
+          )}
+        </div>
+        <nav className="flex-1 px-4 space-y-2 mt-4">
+          {menuItems.map(item => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 group relative overflow-hidden
+                ${activeTab === item.id 
+                  ? 'bg-white text-black shadow-[0_0_30px_rgba(255,255,255,0.1)] translate-x-2' 
+                  : 'text-stone-400 hover:bg-stone-900 hover:text-white'}`}
+            >
+              <span className={`transition-transform duration-300 ${activeTab === item.id ? 'scale-110' : 'group-hover:scale-110'}`}>
+                {item.icon}
+              </span>
+              {isSidebarOpen && (
+                <span className={`text-xs font-black uppercase tracking-[0.15em] whitespace-nowrap transition-all duration-500 ${activeTab === item.id ? 'opacity-100' : 'opacity-70 group-hover:opacity-100'}`}>
+                  {item.label}
+                </span>
+              )}
+            </button>
+          ))}
         </nav>
-      </header>
-      <main className="flex-1 p-8">
+      </aside>
+      <main className={`flex-1 transition-all duration-500 ease-out ${isSidebarOpen ? 'ml-72' : 'ml-24'} p-8 md:p-12 min-h-screen`}>
         {children}
       </main>
     </div>
