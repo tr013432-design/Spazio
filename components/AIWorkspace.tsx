@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { geminiService } from '../services/gemini';
 import { Icons } from '../constants';
@@ -10,7 +9,8 @@ const AIWorkspace: React.FC = () => {
   const [budget, setBudget] = useState('');
   const [normQuery, setNormQuery] = useState('');
   const [loading, setLoading] = useState(false);
-  
+  const [error, setError] = useState<string | null>(null); // NOVO: Estado de erro
+   
   const [briefingResult, setBriefingResult] = useState<{ styles: string[], materials: string[], profileSummary: string } | null>(null);
   const [proposalResult, setProposalResult] = useState<string | null>(null);
   const [normResult, setNormResult] = useState<string | null>(null);
@@ -18,22 +18,35 @@ const AIWorkspace: React.FC = () => {
 
   const handleAction = async () => {
     setLoading(true);
+    setError(null); // Limpa erros anteriores
+    console.log(`[AI] Iniciando processo: ${activeTool}`); // Debug
+
     try {
       if (activeTool === 'briefing') {
         const result = await geminiService.analyzeBriefing(inputText);
+        console.log('[AI] Resultado Briefing:', result); // Debug
+        
+        if (!result) throw new Error("A IA não conseguiu estruturar os dados. Tente detalhar mais o texto.");
         setBriefingResult(result);
+
       } else if (activeTool === 'proposal') {
         const result = await geminiService.generateProposal(clientName, inputText, budget ? Number(budget) : undefined);
-        setProposalResult(result || '');
+        if (!result) throw new Error("Não foi possível gerar a proposta.");
+        setProposalResult(result);
+
       } else if (activeTool === 'norms') {
         const result = await geminiService.analyzeRegulatoryDocs(inputText, normQuery);
-        setNormResult(result || '');
+        if (!result) throw new Error("Não foi possível analisar a norma.");
+        setNormResult(result);
+
       } else if (activeTool === 'moodboard') {
         const result = await geminiService.generateMoodboard(inputText);
+        if (!result) throw new Error("Não foi possível gerar a imagem.");
         setMoodboardUrl(result);
       }
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      console.error("[AI] Erro:", e);
+      setError(e.message || "Ocorreu um erro desconhecido na conexão com a IA.");
     } finally {
       setLoading(false);
     }
@@ -51,8 +64,7 @@ const AIWorkspace: React.FC = () => {
         ].map((tool) => (
           <button 
             key={tool.id}
-            // Fix: Changed setActiveTab to setActiveTool as the state intended to be changed is the internal activeTool
-            onClick={() => setActiveTool(tool.id as any)}
+            onClick={() => { setActiveTool(tool.id as any); setError(null); }}
             className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTool === tool.id ? 'bg-stone-900 text-white shadow-xl scale-105' : 'bg-white text-stone-400 border border-stone-200 hover:border-stone-400'}`}
           >
             {tool.label}
@@ -89,6 +101,14 @@ const AIWorkspace: React.FC = () => {
           </div>
 
           <div className="space-y-8">
+            {/* Mensagem de Erro Visual */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 p-4 rounded-2xl flex items-center gap-3 text-red-700 animate-slideUp">
+                <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <p className="text-sm font-bold">{error}</p>
+              </div>
+            )}
+
             {activeTool === 'proposal' && (
               <div className="grid grid-cols-2 gap-8">
                 <div className="space-y-2">
@@ -155,20 +175,20 @@ const AIWorkspace: React.FC = () => {
                 <div>
                   <p className="text-[10px] font-black text-stone-300 uppercase mb-3">Estilos Recomendados</p>
                   <div className="flex flex-wrap gap-2">
-                    {briefingResult.styles.map((s, i) => (
+                    {briefingResult.styles?.map((s, i) => (
                       <span key={i} className="bg-stone-900 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-lg">{s}</span>
-                    ))}
+                    )) || <span>Sem estilo definido</span>}
                   </div>
                 </div>
                 <div>
                   <p className="text-[10px] font-black text-stone-300 uppercase mb-3">Materialidade</p>
                   <div className="grid grid-cols-1 gap-2">
-                    {briefingResult.materials.map((m, i) => (
+                    {briefingResult.materials?.map((m, i) => (
                       <div key={i} className="flex items-center gap-3 p-4 bg-stone-50 rounded-2xl border border-stone-100 text-sm font-semibold text-stone-700">
                         <div className="w-1.5 h-1.5 rounded-full bg-stone-900"></div>
                         {m}
                       </div>
-                    ))}
+                    )) || <div>Sem materiais definidos</div>}
                   </div>
                 </div>
               </div>
@@ -194,10 +214,10 @@ const AIWorkspace: React.FC = () => {
 
         {activeTool === 'norms' && normResult && (
           <div className="bg-stone-50 border-2 border-stone-900 p-12 rounded-[40px] shadow-xl">
-             <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-stone-900 mb-8">Parecer Técnico da IA</h4>
-             <div className="text-stone-800 leading-relaxed font-medium whitespace-pre-wrap">
-               {normResult}
-             </div>
+              <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-stone-900 mb-8">Parecer Técnico da IA</h4>
+              <div className="text-stone-800 leading-relaxed font-medium whitespace-pre-wrap">
+                {normResult}
+              </div>
           </div>
         )}
 
