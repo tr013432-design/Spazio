@@ -1,4 +1,4 @@
-import { GoogleGenAI, SchemaType } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 
 export const geminiService = {
   async analyzeBriefing(briefing: string) {
@@ -10,20 +10,20 @@ export const geminiService = {
         config: {
           responseMimeType: "application/json",
           responseSchema: {
-            type: SchemaType.OBJECT,
+            type: Type.OBJECT,
             properties: {
               styles: {
-                type: SchemaType.ARRAY,
-                items: { type: SchemaType.STRING },
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
                 description: "3 sugestões de estilo de design"
               },
               materials: {
-                type: SchemaType.ARRAY,
-                items: { type: SchemaType.STRING },
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
                 description: "Lista de materiais recomendados"
               },
               profileSummary: {
-                type: SchemaType.STRING,
+                type: Type.STRING,
                 description: "Resumo do perfil do cliente"
               }
             },
@@ -31,9 +31,7 @@ export const geminiService = {
           }
         }
       });
-      // Tratamento extra para garantir que o JSON venha limpo
-      const text = response.text();
-      return JSON.parse(text || '{}');
+      return JSON.parse(response.text() || '{}');
     } catch (error) {
       console.error("Erro AI Briefing:", error);
       throw error;
