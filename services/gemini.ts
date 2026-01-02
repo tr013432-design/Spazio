@@ -70,4 +70,41 @@ function parseResponse(text: string, isJson: boolean) {
     return {
       styles: ["Moderno", "Minimalista"],
       materials: ["Concreto", "Madeira"],
-      profileSummary: "Resumo gerado,
+      profileSummary: "Resumo gerado, mas houve um erro na formatação dos dados."
+    };
+  }
+}
+
+export const geminiService = {
+  async analyzeBriefing(briefing: string) {
+    const prompt = `Atue como um arquiteto. Analise este briefing e retorne APENAS um JSON válido com as chaves:
+    - styles: array de 3 strings (ex: ["Moderno", "Industrial"]).
+    - materials: array de 3 strings.
+    - profileSummary: string com resumo curto.
+    
+    Briefing: "${briefing}"`;
+    return await callGemini(prompt, true);
+  },
+
+  async generateFollowUpMessage(leadName: string, status: string) {
+    return await callGemini(`Escreva uma mensagem curta de WhatsApp para o cliente ${leadName} (fase: ${status}). Seja elegante e persuasivo.`);
+  },
+
+  async generateProposal(leadName: string, notes: string, budget?: number) {
+    const prompt = `Crie uma proposta comercial para ${leadName}. 
+    Notas: "${notes}". 
+    ${budget ? `Orçamento: R$ ${budget}` : ''}
+    
+    Use títulos em Markdown (##) para: 1. O Conceito, 2. O Diagnóstico, 3. A Solução.`;
+    
+    return await callGemini(prompt);
+  },
+
+  async analyzeRegulatoryDocs(context: string, query: string) {
+    return await callGemini(`Baseado no texto: "${context}", responda: "${query}"`);
+  },
+
+  async generateMoodboard(prompt: string) {
+    return null;
+  }
+};
