@@ -15,7 +15,6 @@ const App: React.FC = () => {
       case 'crm': return <CRM />;
       case 'projects': return <Projects />;
       case 'finance': return <Finance />;
-      case 'ai': return <AIWorkspace />;
       default: return <Dashboard />;
     }
   };
