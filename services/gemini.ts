@@ -38,8 +38,8 @@ export const geminiService = {
   },
 
   async generateFollowUpMessage(leadName: string, status: string) {
-    // Fix: Create new instance using direct import.meta.env.VITE_GEMINI_API_KEY
-    const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+    // Fix: Create new instance using direct AIzaSyCgKxPr3ClUMEjAecZKvYsn9SCWn0pSGIg
+    const ai = new GoogleGenAI({ apiKey: AIzaSyCgKxPr3ClUMEjAecZKvYsn9SCWn0pSGIg });
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `Escreva uma mensagem de WhatsApp para o cliente ${leadName} que está no estágio "${status}". 
@@ -50,8 +50,8 @@ export const geminiService = {
   },
 
   async generateProposal(leadName: string, notes: string, budget?: number) {
-    // Fix: Create new instance using direct import.meta.env.VITE_GEMINI_API_KEY
-    const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+    // Fix: Create new instance using direct AIzaSyCgKxPr3ClUMEjAecZKvYsn9SCWn0pSGIg
+    const ai = new GoogleGenAI({ apiKey: AIzaSyCgKxPr3ClUMEjAecZKvYsn9SCWn0pSGIg });
     const response = await ai.models.generateContent({
       model: "gemini-3-pro-preview",
       contents: `Você é um arquiteto renomado com alto poder de fechamento. 
@@ -69,8 +69,8 @@ export const geminiService = {
   },
 
   async analyzeRegulatoryDocs(context: string, query: string) {
-    // Fix: Create new instance using direct import.meta.env.VITE_GEMINI_API_KEY
-    const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+    // Fix: Create new instance using direct AIzaSyCgKxPr3ClUMEjAecZKvYsn9SCWn0pSGIg
+    const ai = new GoogleGenAI({ apiKey:AIzaSyCgKxPr3ClUMEjAecZKvYsn9SCWn0pSGIg });
     const response = await ai.models.generateContent({
       model: "gemini-3-pro-preview",
       contents: `Você é um consultor técnico de arquitetura e urbanismo. 
@@ -85,8 +85,8 @@ export const geminiService = {
   },
 
   async generateMoodboard(prompt: string) {
-    // Fix: Create new instance using direct import.meta.env.VITE_GEMINI_API_KEY
-    const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+    // Fix: Create new instance using direct AIzaSyCgKxPr3ClUMEjAecZKvYsn9SCWn0pSGIg
+    const ai = new GoogleGenAI({ apiKey: AIzaSyCgKxPr3ClUMEjAecZKvYsn9SCWn0pSGIg });
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
       contents: {
