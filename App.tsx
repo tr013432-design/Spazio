@@ -4,7 +4,6 @@ import Layout from './components/MainLayout';
 import Dashboard from './components/Dashboard';
 import CRM from './components/CRM';
 import Finance from './components/Finance';
-import AIWorkspace from './components/AIWorkspace';
 import Projects from './components/Projects';
 
 const App: React.FC = () => {
