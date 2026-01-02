@@ -6,7 +6,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 export const geminiService = {
   async analyzeBriefing(briefing: string) {
     // Fix: Create new instance using direct import.meta.env.VITE_GEMINI_API_KEY
-    const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+    const ai = new GoogleGenAI({ apiKey:AIzaSyCgKxPr3ClUMEjAecZKvYsn9SCWn0pSGIg });
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `Analise o seguinte briefing de arquitetura/design e forneça 3 sugestões de estilo, uma lista de materiais recomendados e um resumo do perfil do cliente. Briefing: ${briefing}`,
