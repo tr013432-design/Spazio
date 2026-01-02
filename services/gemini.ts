@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// --- SUA NOVA CHAVE DE API (Do projeto Spazio-1) ---
-const API_KEY = "AIzaSyChok5AQ6eMFacL1qUgwc8wNDMLYAxVtHA";
+// --- SUA NOVA CHAVE (ATUALIZADA) ---
+const API_KEY = "AIzaSyDueLPbw6PKas2WaV6OICety1kYPadNAtY";
 
 // Função interna que tenta chamar um modelo específico
 async function tryModel(modelName: string, promptText: string, isJson: boolean) {
@@ -11,7 +11,7 @@ async function tryModel(modelName: string, promptText: string, isJson: boolean) 
     contents: [{ parts: [{ text: promptText }] }]
   };
 
-  // Configuração especial: O modelo 'flash' aceita JSON nativo, o 'pro' antigo não.
+  // O modelo Flash aceita modo JSON nativo, o Pro antigo não.
   if (isJson && modelName.includes("flash")) {
     payload.generationConfig = { response_mime_type: "application/json" };
   }
@@ -24,6 +24,7 @@ async function tryModel(modelName: string, promptText: string, isJson: boolean) 
 
   if (!response.ok) {
     const errorData = await response.json();
+    // Lança erro para o sistema tentar o próximo modelo
     throw new Error(`Erro no modelo ${modelName}: ${errorData.error?.message || response.statusText}`);
   }
 
@@ -35,82 +36,38 @@ async function tryModel(modelName: string, promptText: string, isJson: boolean) 
   return text;
 }
 
-// Função principal que gerencia as tentativas
+// Função principal que gerencia as tentativas (Flash -> Pro)
 async function callGemini(promptText: string, isJson: boolean = false) {
   try {
-    // 1ª Tentativa: Modelo Flash (Mais rápido e inteligente)
+    // 1ª Tentativa: Modelo Flash 1.5 (Mais rápido e inteligente)
     const text = await tryModel("gemini-1.5-flash", promptText, isJson);
     return parseResponse(text, isJson);
   } catch (error) {
-    console.warn("Falha no Flash, tentando modelo Pro...", error);
+    console.warn("Flash falhou, tentando modelo Pro (Backup)...", error);
     try {
-      // 2ª Tentativa: Modelo Pro (Backup de segurança universal)
-      const text = await tryModel("gemini-pro", promptText, false); // Pro não suporta json-mode nativo
+      // 2ª Tentativa: Modelo Pro 1.0 (Backup universal)
+      const text = await tryModel("gemini-pro", promptText, false); 
       return parseResponse(text, isJson);
     } catch (finalError) {
-      console.error("Erro fatal na IA:", finalError);
+      console.error("Erro fatal na IA (Todos os modelos falharam):", finalError);
       throw finalError;
     }
   }
 }
 
-// Função auxiliar para limpar e ler o JSON (remove ```json ... ```)
+// Função auxiliar para limpar e ler o JSON
 function parseResponse(text: string, isJson: boolean) {
+  if (!text) return null;
   if (!isJson) return text;
 
   try {
+    // Remove formatação de código que a IA coloca às vezes
     const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
     return JSON.parse(cleanText);
   } catch (e) {
-    console.error("Erro ao ler JSON:", text);
-    // Retorna um objeto padrão para não travar o site
+    console.error("Erro ao ler JSON da resposta:", text);
+    // Retorna um objeto padrão para não travar o site em caso de erro de formatação
     return {
-      styles: ["Moderno", "Minimalista", "Industrial"],
-      materials: ["Concreto", "Madeira", "Aço"],
-      profileSummary: "Não foi possível estruturar o perfil automaticamente."
-    };
-  }
-}
-
-export const geminiService = {
-  async analyzeBriefing(briefing: string) {
-    const prompt = `Atue como um arquiteto sênior. Analise o briefing abaixo e retorne APENAS um JSON válido com as chaves:
-    - styles: array de 3 strings com estilos sugeridos.
-    - materials: array de 3 strings com materiais.
-    - profileSummary: string com resumo do perfil do cliente.
-    
-    Briefing: "${briefing}"`;
-    return await callGemini(prompt, true);
-  },
-
-  async generateFollowUpMessage(leadName: string, status: string) {
-    return await callGemini(`Escreva uma mensagem curta de WhatsApp (sem hashtags) para o cliente ${leadName} que está na fase: ${status}. Use um tom elegante, exclusivo e persuasivo.`);
-  },
-
-  async generateProposal(leadName: string, notes: string, budget?: number) {
-    const prompt = `Crie uma estrutura de proposta comercial para ${leadName}. 
-    Notas do projeto: "${notes}". 
-    ${budget ? `Orçamento estimado: R$ ${budget}` : ''}
-    
-    Estruture a resposta com estes tópicos (use markdown para títulos):
-    ## 1. O Sonho (Conexão emocional)
-    ## 2. O Diagnóstico (O que precisa ser resolvido)
-    ## 3. A Solução (Sua abordagem única)
-    ## 4. Próximos Passos`;
-    
-    return await callGemini(prompt);
-  },
-
-  async analyzeRegulatoryDocs(context: string, query: string) {
-    return await callGemini(`Baseado APENAS no seguinte texto técnico, responda à pergunta de forma direta:
-    
-    Texto: "${context}"
-    
-    Pergunta: "${query}"`);
-  },
-
-  async generateMoodboard(prompt: string) {
-    // A API de texto não gera imagens. Retornamos null para o frontend tratar.
-    return null;
-  }
-};
+      styles: ["Moderno", "Minimalista"],
+      materials: ["Concreto", "Madeira"],
+      profileSummary: "Resumo gerado,
