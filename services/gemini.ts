@@ -15,6 +15,7 @@ const getAIModel = (modelName: string = "gemini-1.5-flash") => {
 
 export const geminiService = {
   async analyzeBriefing(briefing: string) {
+    // Mantido o flash
     const model = getAIModel("gemini-1.5-flash");
     
     const prompt = `Analise o seguinte briefing de arquitetura/design e forneça 3 sugestões de estilo, uma lista de materiais recomendados e um resumo do perfil do cliente. Briefing: ${briefing}`;
@@ -60,7 +61,8 @@ export const geminiService = {
   },
 
   async generateProposal(leadName: string, notes: string, budget?: number) {
-    const model = getAIModel("gemini-1.5-pro"); // Usando o Pro para textos mais complexos
+    // CORREÇÃO AQUI: Mudado de 'pro' para 'flash' para evitar o erro 404
+    const model = getAIModel("gemini-1.5-flash"); 
     const result = await model.generateContent(`Você é um arquiteto renomado com alto poder de fechamento. 
       Gere uma estrutura de proposta comercial persuasiva para ${leadName} baseada nas seguintes notas: "${notes}".
       ${budget ? `O investimento estimado discutido foi de R$ ${budget.toLocaleString('pt-BR')}.` : ''}
@@ -75,7 +77,8 @@ export const geminiService = {
   },
 
   async analyzeRegulatoryDocs(context: string, query: string) {
-    const model = getAIModel("gemini-1.5-pro");
+    // CORREÇÃO AQUI: Mudado de 'pro' para 'flash' para evitar o erro 404
+    const model = getAIModel("gemini-1.5-flash");
     const result = await model.generateContent(`Você é um consultor técnico de arquitetura e urbanismo. 
       Baseado no texto normativo fornecido abaixo, responda à seguinte dúvida: "${query}"
       
@@ -87,7 +90,6 @@ export const geminiService = {
   },
 
   async generateMoodboard(prompt: string) {
-    // Fallback de texto para imagem, já que a geração de imagem nativa requer outra API
     try {
         const model = getAIModel("gemini-1.5-flash");
         const result = await model.generateContent(`Crie uma descrição visual detalhada e evocativa para um moodboard de arquitetura com o estilo: ${prompt}. Descreva cores, texturas e atmosfera.`);
