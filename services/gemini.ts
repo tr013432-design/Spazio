@@ -1,16 +1,17 @@
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 
-// Tenta pegar a chave do ambiente
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-
-// Inicializa a IA
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
-// Função inteligente que tenta o modelo novo, se falhar, tenta o antigo
-const getAIModel = (modelName: string = "gemini-1.5-flash-001") => {
+// Função para limpar o JSON que o Gemini às vezes embrulha em Markdown
+const cleanJSON = (text: string) => {
+  return text.replace(/```json/g, '').replace(/```/g, '').trim();
+};
+
+const getAIModel = (modelName: string = "gemini-pro") => {
   if (!apiKey || !genAI) {
     console.error("ERRO CRÍTICO: Chave de API não configurada.");
-    throw new Error("Chave de API ausente. Verifique o .env");
+    throw new Error("Chave de API ausente.");
   }
   return genAI.getGenerativeModel({ model: modelName });
 };
@@ -18,92 +19,51 @@ const getAIModel = (modelName: string = "gemini-1.5-flash-001") => {
 export const geminiService = {
   async analyzeBriefing(briefing: string) {
     try {
-      const model = getAIModel("gemini-1.5-flash-001"); // Tentativa principal
+      // Usando o modelo clássico gemini-pro
+      const model = getAIModel("gemini-pro");
       
-      const prompt = `Analise o seguinte briefing de arquitetura/design e forneça 3 sugestões de estilo, uma lista de materiais recomendados e um resumo do perfil do cliente. Briefing: ${briefing}`;
+      const prompt = `Analise o briefing abaixo e retorne APENAS um JSON válido (sem markdown) com as chaves: styles (array de strings), materials (array de strings) e profileSummary (string).
+      
+      Briefing: ${briefing}`;
 
-      const schema = {
-        type: SchemaType.OBJECT,
-        properties: {
-          styles: {
-            type: SchemaType.ARRAY,
-            items: { type: SchemaType.STRING },
-            description: "3 sugestões de estilo de design"
-          },
-          materials: {
-            type: SchemaType.ARRAY,
-            items: { type: SchemaType.STRING },
-            description: "Lista de materiais recomendados"
-          },
-          profileSummary: {
-            type: SchemaType.STRING,
-            description: "Resumo do perfil do cliente"
-          }
-        },
-        required: ["styles", "materials", "profileSummary"]
-      };
-
-      const result = await model.generateContent({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: {
-          responseMimeType: "application/json",
-          responseSchema: schema,
-        }
-      });
-
-      return JSON.parse(result.response.text());
+      const result = await model.generateContent(prompt);
+      const text = result.response.text();
+      
+      return JSON.parse(cleanJSON(text));
     } catch (error) {
       console.error("Erro no analyzeBriefing:", error);
-      throw new Error("Falha ao analisar briefing. Tente novamente.");
+      throw new Error("Falha ao analisar. Tente novamente.");
     }
   },
 
   async generateFollowUpMessage(leadName: string, status: string) {
-    const model = getAIModel("gemini-1.5-flash-001");
-    const result = await model.generateContent(`Escreva uma mensagem de WhatsApp para o cliente ${leadName} que está no estágio "${status}". 
-      O tom deve ser EXTREMAMENTE persuasivo, elegante e "agressivo" no sentido de exclusividade e urgência velada. 
-      Foque na transformação de vida e no valor emocional do projeto. Estilo: Proximidade e Autoridade.`);
+    const model = getAIModel("gemini-pro");
+    const result = await model.generateContent(`Escreva uma mensagem curta de WhatsApp para o cliente ${leadName} (status: ${status}). Tom persuasivo e elegante. Sem hashtags.`);
     return result.response.text();
   },
 
   async generateProposal(leadName: string, notes: string, budget?: number) {
-    // AQUI ESTÁ O TRUQUE: Usamos o Flash 001. Se der erro no futuro, troque por "gemini-pro"
-    const model = getAIModel("gemini-1.5-flash-001"); 
+    const model = getAIModel("gemini-pro"); 
     
-    const result = await model.generateContent(`Você é um arquiteto renomado com alto poder de fechamento. 
-      Gere uma estrutura de proposta comercial persuasiva para ${leadName} baseada nas seguintes notas: "${notes}".
-      ${budget ? `O investimento estimado discutido foi de R$ ${budget.toLocaleString('pt-BR')}.` : ''}
-      
-      A proposta deve seguir este roteiro:
-      1. O SONHO: Validação emocional.
-      2. O DIAGNÓSTICO: Problemas técnicos e estéticos.
-      3. A SOLUÇÃO EXCLUSIVA: Sua abordagem única.
-      4. ETAPAS DA JORNADA: Processo de trabalho.
-      5. O PRÓXIMO PASSO: CTA forte.`);
+    const result = await model.generateContent(`Você é um arquiteto sênior. Crie uma proposta comercial para ${leadName}. Notas: "${notes}". ${budget ? `Orçamento: R$ ${budget}` : ''}.
+    Estruture em: 1. O Sonho, 2. Diagnóstico, 3. Solução, 4. Próximos Passos.`);
+    
     return result.response.text();
   },
 
   async analyzeRegulatoryDocs(context: string, query: string) {
-    const model = getAIModel("gemini-1.5-flash-001");
-    const result = await model.generateContent(`Você é um consultor técnico de arquitetura e urbanismo. 
-      Baseado no texto normativo fornecido abaixo, responda à seguinte dúvida: "${query}"
-      
-      Texto Normativo/Plano Diretor:
-      ${context}
-      
-      Responda de forma técnica, citando possíveis artigos ou diretrizes mencionados no texto. Seja direto e preciso.`);
+    const model = getAIModel("gemini-pro");
+    const result = await model.generateContent(`Atue como especialista em legislação urbana. Baseado no texto: "${context}", responda: "${query}". Seja técnico.`);
     return result.response.text();
   },
 
   async generateMoodboard(prompt: string) {
     try {
-        const model = getAIModel("gemini-1.5-flash-001");
-        // Fallback de texto, pois geração de imagem requer outra API
-        const result = await model.generateContent(`Crie uma descrição visual detalhada e evocativa para um moodboard de arquitetura com o estilo: ${prompt}. Descreva cores, texturas e atmosfera.`);
-        console.warn("Geração de imagem nativa indisponível nesta biblioteca padrão.");
+        const model = getAIModel("gemini-pro");
+        const result = await model.generateContent(`Descreva visualmente um moodboard para: ${prompt}. Descreva cores e materiais.`);
+        console.warn("Geração de imagem requer modelo Imagen (indisponível na chave padrão).");
         return null; 
     } catch (error) {
-        console.error("Erro no moodboard:", error);
         return null;
     }
   }
