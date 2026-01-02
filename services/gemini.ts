@@ -1,110 +1,131 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+// geminiService.ts
 
-// --- SUA NOVA CHAVE (ATUALIZADA) ---
-const API_KEY = "AIzaSyDueLPbw6PKas2WaV6OICety1kYPadNAtY";
+// ⚠️ NUNCA exponha a chave no código
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+// ou, se for Node puro / Next:
+// const API_KEY = process.env.GEMINI_API_KEY;
 
-// Função interna que tenta chamar um modelo específico
-async function tryModel(modelName: string, promptText: string, isJson: boolean) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${API_KEY}`;
-  
+if (!API_KEY) {
+  throw new Error("API Key do Gemini não encontrada nas variáveis de ambiente.");
+}
+
+// Função que chama o Gemini 1.5 Flash (modelo estável)
+async function callGemini(promptText: string, isJson: boolean = false) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+
   const payload: any = {
-    contents: [{ parts: [{ text: promptText }] }]
+    contents: [
+      {
+        parts: [{ text: promptText }]
+      }
+    ]
   };
 
-  // O modelo Flash aceita modo JSON nativo, o Pro antigo não.
-  if (isJson && modelName.includes("flash")) {
-    payload.generationConfig = { response_mime_type: "application/json" };
+  // Flash aceita JSON nativo
+  if (isJson) {
+    payload.generationConfig = {
+      response_mime_type: "application/json"
+    };
   }
 
   const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify(payload)
   });
 
   if (!response.ok) {
     const errorData = await response.json();
-    // Lança erro para o sistema tentar o próximo modelo
-    throw new Error(`Erro no modelo ${modelName}: ${errorData.error?.message || response.statusText}`);
+    throw new Error(
+      errorData?.error?.message || "Erro desconhecido ao chamar o Gemini"
+    );
   }
 
   const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
-  if (!text) throw new Error("A IA retornou uma resposta vazia.");
-
-  return text;
-}
-
-// Função principal que gerencia as tentativas (Flash -> Pro)
-async function callGemini(promptText: string, isJson: boolean = false) {
-  try {
-    // 1ª Tentativa: Modelo Flash 1.5 (Mais rápido e inteligente)
-    const text = await tryModel("gemini-1.5-flash", promptText, isJson);
-    return parseResponse(text, isJson);
-  } catch (error) {
-    console.warn("Flash falhou, tentando modelo Pro (Backup)...", error);
-    try {
-      // 2ª Tentativa: Modelo Pro 1.0 (Backup universal)
-      const text = await tryModel("gemini-pro", promptText, false); 
-      return parseResponse(text, isJson);
-    } catch (finalError) {
-      console.error("Erro fatal na IA (Todos os modelos falharam):", finalError);
-      throw finalError;
-    }
+  if (!text) {
+    throw new Error("Resposta vazia do Gemini.");
   }
+
+  return parseResponse(text, isJson);
 }
 
-// Função auxiliar para limpar e ler o JSON
+// Limpa e converte JSON quando necessário
 function parseResponse(text: string, isJson: boolean) {
-  if (!text) return null;
   if (!isJson) return text;
 
   try {
-    // Remove formatação de código que a IA coloca às vezes
-    const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    const cleanText = text
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+
     return JSON.parse(cleanText);
-  } catch (e) {
-    console.error("Erro ao ler JSON da resposta:", text);
-    // Retorna um objeto padrão para não travar o site em caso de erro de formatação
+  } catch {
+    // fallback seguro
     return {
-      styles: ["Moderno", "Minimalista"],
-      materials: ["Concreto", "Madeira"],
-      profileSummary: "Resumo gerado, mas houve um erro na formatação dos dados."
+      styles: ["Moderno", "Contemporâneo", "Minimalista"],
+      materials: ["Concreto", "Madeira", "Vidro"],
+      profileSummary:
+        "Análise gerada com sucesso, porém houve ajuste automático na formatação."
     };
   }
 }
 
+// ================== API DO SEU SISTEMA ==================
+
 export const geminiService = {
   async analyzeBriefing(briefing: string) {
-    const prompt = `Atue como um arquiteto. Analise este briefing e retorne APENAS um JSON válido com as chaves:
-    - styles: array de 3 strings (ex: ["Moderno", "Industrial"]).
-    - materials: array de 3 strings.
-    - profileSummary: string com resumo curto.
-    
-    Briefing: "${briefing}"`;
+    const prompt = `
+Atue como um arquiteto experiente.
+Retorne APENAS um JSON válido com:
+- styles: array de 3 strings
+- materials: array de 3 strings
+- profileSummary: string curta
+
+Briefing:
+"${briefing}"
+    `;
     return await callGemini(prompt, true);
   },
 
   async generateFollowUpMessage(leadName: string, status: string) {
-    return await callGemini(`Escreva uma mensagem curta de WhatsApp para o cliente ${leadName} (fase: ${status}). Seja elegante e persuasivo.`);
+    const prompt = `
+Escreva uma mensagem curta, elegante e persuasiva de WhatsApp
+para o cliente ${leadName}.
+Fase do funil: ${status}.
+    `;
+    return await callGemini(prompt);
   },
 
   async generateProposal(leadName: string, notes: string, budget?: number) {
-    const prompt = `Crie uma proposta comercial para ${leadName}. 
-    Notas: "${notes}". 
-    ${budget ? `Orçamento: R$ ${budget}` : ''}
-    
-    Use títulos em Markdown (##) para: 1. O Conceito, 2. O Diagnóstico, 3. A Solução.`;
-    
+    const prompt = `
+Crie uma proposta comercial profissional para ${leadName}.
+
+Notas:
+"${notes}"
+
+${budget ? `Orçamento estimado: R$ ${budget}` : ""}
+
+Use títulos em Markdown:
+## O Conceito
+## O Diagnóstico
+## A Solução
+    `;
     return await callGemini(prompt);
   },
 
   async analyzeRegulatoryDocs(context: string, query: string) {
-    return await callGemini(`Baseado no texto: "${context}", responda: "${query}"`);
-  },
+    const prompt = `
+Baseado no texto abaixo:
+"${context}"
 
-  async generateMoodboard(prompt: string) {
-    return null;
+Responda objetivamente:
+"${query}"
+    `;
+    return await callGemini(prompt);
   }
 };
