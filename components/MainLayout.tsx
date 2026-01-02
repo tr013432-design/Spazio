@@ -17,7 +17,6 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
     { id: 'crm', label: 'CRM', icon: <Icons.Users /> },
     { id: 'projects', label: 'Projetos', icon: <Icons.Briefcase /> },
     { id: 'finance', label: 'Financeiro', icon: <Icons.Dollar /> },
-    { id: 'ai', label: 'IA Workspace', icon: <Icons.Sparkles /> },
   ];
 
   const togglePresentation = () => setIsPresentationMode(!isPresentationMode);
