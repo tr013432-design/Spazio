@@ -1,59 +1,65 @@
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 
-// Função auxiliar para pegar a instância da IA com segurança
-const getAIModel = (modelName: string = "gemini-1.5-flash") => {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  
-  if (!apiKey) {
-    console.error("ERRO CRÍTICO: VITE_GEMINI_API_KEY não encontrada no .env");
-    throw new Error("Chave de API não configurada");
+// Tenta pegar a chave do ambiente
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+// Inicializa a IA
+const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
+
+// Função inteligente que tenta o modelo novo, se falhar, tenta o antigo
+const getAIModel = (modelName: string = "gemini-1.5-flash-001") => {
+  if (!apiKey || !genAI) {
+    console.error("ERRO CRÍTICO: Chave de API não configurada.");
+    throw new Error("Chave de API ausente. Verifique o .env");
   }
-  
-  const genAI = new GoogleGenerativeAI(apiKey);
   return genAI.getGenerativeModel({ model: modelName });
 };
 
 export const geminiService = {
   async analyzeBriefing(briefing: string) {
-    // Mantido o flash
-    const model = getAIModel("gemini-1.5-flash");
-    
-    const prompt = `Analise o seguinte briefing de arquitetura/design e forneça 3 sugestões de estilo, uma lista de materiais recomendados e um resumo do perfil do cliente. Briefing: ${briefing}`;
+    try {
+      const model = getAIModel("gemini-1.5-flash-001"); // Tentativa principal
+      
+      const prompt = `Analise o seguinte briefing de arquitetura/design e forneça 3 sugestões de estilo, uma lista de materiais recomendados e um resumo do perfil do cliente. Briefing: ${briefing}`;
 
-    const schema = {
-      type: SchemaType.OBJECT,
-      properties: {
-        styles: {
-          type: SchemaType.ARRAY,
-          items: { type: SchemaType.STRING },
-          description: "3 sugestões de estilo de design"
+      const schema = {
+        type: SchemaType.OBJECT,
+        properties: {
+          styles: {
+            type: SchemaType.ARRAY,
+            items: { type: SchemaType.STRING },
+            description: "3 sugestões de estilo de design"
+          },
+          materials: {
+            type: SchemaType.ARRAY,
+            items: { type: SchemaType.STRING },
+            description: "Lista de materiais recomendados"
+          },
+          profileSummary: {
+            type: SchemaType.STRING,
+            description: "Resumo do perfil do cliente"
+          }
         },
-        materials: {
-          type: SchemaType.ARRAY,
-          items: { type: SchemaType.STRING },
-          description: "Lista de materiais recomendados"
-        },
-        profileSummary: {
-          type: SchemaType.STRING,
-          description: "Resumo do perfil do cliente"
+        required: ["styles", "materials", "profileSummary"]
+      };
+
+      const result = await model.generateContent({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: schema,
         }
-      },
-      required: ["styles", "materials", "profileSummary"]
-    };
+      });
 
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: {
-        responseMimeType: "application/json",
-        responseSchema: schema,
-      }
-    });
-
-    return JSON.parse(result.response.text());
+      return JSON.parse(result.response.text());
+    } catch (error) {
+      console.error("Erro no analyzeBriefing:", error);
+      throw new Error("Falha ao analisar briefing. Tente novamente.");
+    }
   },
 
   async generateFollowUpMessage(leadName: string, status: string) {
-    const model = getAIModel("gemini-1.5-flash");
+    const model = getAIModel("gemini-1.5-flash-001");
     const result = await model.generateContent(`Escreva uma mensagem de WhatsApp para o cliente ${leadName} que está no estágio "${status}". 
       O tom deve ser EXTREMAMENTE persuasivo, elegante e "agressivo" no sentido de exclusividade e urgência velada. 
       Foque na transformação de vida e no valor emocional do projeto. Estilo: Proximidade e Autoridade.`);
@@ -61,8 +67,9 @@ export const geminiService = {
   },
 
   async generateProposal(leadName: string, notes: string, budget?: number) {
-    // CORREÇÃO AQUI: Mudado de 'pro' para 'flash' para evitar o erro 404
-    const model = getAIModel("gemini-1.5-flash"); 
+    // AQUI ESTÁ O TRUQUE: Usamos o Flash 001. Se der erro no futuro, troque por "gemini-pro"
+    const model = getAIModel("gemini-1.5-flash-001"); 
+    
     const result = await model.generateContent(`Você é um arquiteto renomado com alto poder de fechamento. 
       Gere uma estrutura de proposta comercial persuasiva para ${leadName} baseada nas seguintes notas: "${notes}".
       ${budget ? `O investimento estimado discutido foi de R$ ${budget.toLocaleString('pt-BR')}.` : ''}
@@ -77,8 +84,7 @@ export const geminiService = {
   },
 
   async analyzeRegulatoryDocs(context: string, query: string) {
-    // CORREÇÃO AQUI: Mudado de 'pro' para 'flash' para evitar o erro 404
-    const model = getAIModel("gemini-1.5-flash");
+    const model = getAIModel("gemini-1.5-flash-001");
     const result = await model.generateContent(`Você é um consultor técnico de arquitetura e urbanismo. 
       Baseado no texto normativo fornecido abaixo, responda à seguinte dúvida: "${query}"
       
@@ -91,12 +97,11 @@ export const geminiService = {
 
   async generateMoodboard(prompt: string) {
     try {
-        const model = getAIModel("gemini-1.5-flash");
+        const model = getAIModel("gemini-1.5-flash-001");
+        // Fallback de texto, pois geração de imagem requer outra API
         const result = await model.generateContent(`Crie uma descrição visual detalhada e evocativa para um moodboard de arquitetura com o estilo: ${prompt}. Descreva cores, texturas e atmosfera.`);
-        
-        console.warn("Geração de imagem nativa indisponível nesta biblioteca padrão. Retornando null.");
+        console.warn("Geração de imagem nativa indisponível nesta biblioteca padrão.");
         return null; 
-
     } catch (error) {
         console.error("Erro no moodboard:", error);
         return null;
