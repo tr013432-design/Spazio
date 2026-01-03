@@ -1,6 +1,6 @@
-
 import React, { useState } from 'react';
 import { Icons } from '../constants';
+import NotificationHub from './NotificationHub'; // <--- Importação da Nova Central de Notificações
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -92,11 +92,12 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
               </button>
+              
               <div className="h-8 w-[1px] bg-stone-200 mx-2 hidden md:block"></div>
-              <button className="p-3 text-stone-500 hover:text-stone-900 hover:bg-stone-100 rounded-2xl transition-all relative">
-                <span className="absolute top-3 right-3 w-2 h-2 bg-stone-900 rounded-full border-2 border-white"></span>
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-              </button>
+              
+              {/* --- AQUI ENTRA A NOVA CENTRAL DE NOTIFICAÇÕES --- */}
+              <NotificationHub /> 
+              
             </div>
           </header>
         )}
