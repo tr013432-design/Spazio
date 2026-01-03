@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import ProposalGenerator from './ProposalGenerator'; // IMPORTANTE: Certifique-se que o arquivo existe na mesma pasta
 
-// --- 1. DEFINIÇÕES LOCAIS (Para não depender de arquivos externos) ---
+// --- 1. DEFINIÇÕES LOCAIS ---
 
-// Ícones SVG Inline para garantir que não quebre por falta de biblioteca
 const Icons = {
   Plus: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/></svg>,
   Calendar: ({ className }: { className?: string }) => <svg className={className || "w-4 h-4"} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>,
@@ -10,14 +10,13 @@ const Icons = {
   Trash: () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
 };
 
-// Enum Simulado
 const LeadStatus = {
   PROSPECTION: 'Prospecção',
   TECHNICAL_VISIT: 'Visita Técnica',
   BRIEFING: 'Briefing',
   CONCEPT: 'Anteprojeto',
   SIGNED: 'Contrato Assinado',
-  LOST: 'LOST' // Status interno para lógica
+  LOST: 'LOST'
 };
 
 type LeadTemperature = 'hot' | 'warm' | 'cold';
@@ -45,7 +44,6 @@ interface Lead {
   tasks: Task[];
 }
 
-// Dados iniciais
 const initialLeads: Lead[] = [
   { 
     id: '1', 
@@ -55,7 +53,7 @@ const initialLeads: Lead[] = [
     source: 'Instagram', 
     status: LeadStatus.PROSPECTION, 
     temperature: 'hot',
-    nextActionDate: '2023-10-20', // Data propositalmente atrasada
+    nextActionDate: '2023-10-20',
     createdAt: '2023-10-25', 
     notes: 'Interesse em reforma de cobertura no Itaim. Busca estilo industrial chic.',
     budget: 85000,
@@ -82,7 +80,6 @@ const initialLeads: Lead[] = [
 // --- 2. COMPONENTE PRINCIPAL ---
 
 const CRM: React.FC = () => {
-  // State Management seguro
   const [leads, setLeads] = useState<Lead[]>(() => {
     if (typeof window === 'undefined') return initialLeads;
     try {
@@ -101,6 +98,7 @@ const CRM: React.FC = () => {
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<string | null>(null);
+  const [isProposalOpen, setIsProposalOpen] = useState(false); // NOVO STATE PARA PROPOSTA
   
   // States de Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -283,6 +281,84 @@ const CRM: React.FC = () => {
             </p>
           </div>
         </div>
+      )}
+
+      {/* --- SLIDE-OVER DE DETALHES + BOTÃO PROPOSTA --- */}
+      {selectedLead && (
+        <div className="fixed inset-0 z-40 flex justify-end">
+           <div className="absolute inset-0 bg-stone-900/30 backdrop-blur-sm transition-opacity" onClick={() => setSelectedLeadId(null)}></div>
+           <div className="relative w-full max-w-2xl bg-white h-full shadow-2xl animate-slideRight flex flex-col overflow-y-auto">
+              
+              <div className="p-8 border-b border-stone-100 flex justify-between items-center bg-stone-50">
+                <div>
+                   <h2 className="text-3xl font-serif font-bold text-stone-900">{selectedLead.name}</h2>
+                   <div className="flex items-center gap-3 mt-2">
+                     <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest ${getTempColor(selectedLead.temperature)}`}>
+                        {selectedLead.temperature === 'hot' ? '🔥 Quente' : selectedLead.temperature === 'warm' ? '☀️ Morno' : '❄️ Frio'}
+                     </span>
+                     <span className="text-xs font-bold text-stone-400">{selectedLead.status}</span>
+                   </div>
+                </div>
+                <button onClick={() => setSelectedLeadId(null)} className="p-2 hover:bg-stone-200 rounded-full transition-colors text-stone-500">✕</button>
+              </div>
+
+              <div className="p-8 space-y-8">
+                 {/* Seção de Ação Rápida */}
+                 <div className="grid grid-cols-2 gap-4">
+                    <button 
+                      onClick={() => { window.open(`https://wa.me/55${selectedLead.phone.replace(/\D/g,'')}`, '_blank'); }}
+                      className="py-4 bg-green-50 text-green-700 border border-green-200 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-green-100 transition-all flex items-center justify-center gap-2"
+                    >
+                      <Icons.WhatsApp /> WhatsApp
+                    </button>
+                    
+                    {/* --- BOTÃO GERADOR DE PROPOSTA --- */}
+                    <button 
+                      onClick={() => setIsProposalOpen(true)}
+                      className="py-4 bg-stone-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-stone-800 transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2"
+                    >
+                      <span className="text-lg">📄</span> Gerar Proposta
+                    </button>
+                 </div>
+
+                 {/* Dados do Lead */}
+                 <div className="space-y-4">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-stone-400 border-b border-stone-100 pb-2">Informações</h4>
+                    <div className="grid grid-cols-2 gap-6">
+                       <div>
+                          <p className="text-[10px] text-stone-400 font-bold uppercase">Budget</p>
+                          <p className="text-lg font-serif font-bold text-stone-800">R$ {selectedLead.budget.toLocaleString('pt-BR')}</p>
+                       </div>
+                       <div>
+                          <p className="text-[10px] text-stone-400 font-bold uppercase">Próximo Passo</p>
+                          <p className={`text-sm font-bold ${isOverdue(selectedLead.nextActionDate) ? 'text-red-500' : 'text-stone-800'}`}>
+                             {selectedLead.nextActionDate ? new Date(selectedLead.nextActionDate).toLocaleDateString() : '-'}
+                          </p>
+                       </div>
+                       <div className="col-span-2">
+                          <p className="text-[10px] text-stone-400 font-bold uppercase mb-1">Notas / Briefing</p>
+                          <p className="text-sm text-stone-600 bg-stone-50 p-4 rounded-xl italic">"{selectedLead.notes}"</p>
+                       </div>
+                    </div>
+                 </div>
+              </div>
+           </div>
+        </div>
+      )}
+
+      {/* --- COMPONENTE GERADOR DE PROPOSTA --- */}
+      {selectedLead && (
+        <ProposalGenerator 
+          isOpen={isProposalOpen} 
+          onClose={() => setIsProposalOpen(false)} 
+          lead={{
+            name: selectedLead.name,
+            email: selectedLead.email,
+            budget: selectedLead.budget || 0,
+            notes: selectedLead.notes,
+            address: selectedLead.address
+          }} 
+        />
       )}
 
       {/* MODAL NOVO LEAD */}
