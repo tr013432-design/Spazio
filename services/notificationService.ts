@@ -1,7 +1,7 @@
 // src/services/notificationService.ts
 
-const TELEGRAM_BOT_TOKEN = AAFwaArZuGBj6gdXb600SYB7I-t_paZxzca'; // Cole o token do BotFather
-const TELEGRAM_CHAT_ID = 6021688560; // Cole seu ID numérico
+const TELEGRAM_BOT_TOKEN = 'AAFwaArZuGBj6gdXb600SYB7I-t_paZxzca'; // Cole o token do BotFather
+const TELEGRAM_CHAT_ID = '6021688560'; // Cole seu ID numérico
 
 export const sendMobileNotification = async (title: string, message: string) => {
   // 1. Notificação no Console (Debug)
