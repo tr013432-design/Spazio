@@ -28,8 +28,9 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
         <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-stone-950 text-stone-100 flex flex-col transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           <div className="p-8 flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold tracking-tighter flex items-center gap-2 font-serif">
-                ARCHI<span className="text-stone-500 font-light">FLOW</span>
+              {/* --- MUDANÇA DE NOME: SPAZIO ARQUITETURA --- */}
+              <h1 className="text-xl font-bold tracking-tighter flex items-center gap-1 font-serif">
+                SPAZIO<span className="text-stone-500 font-light">ARQUITETURA</span>
               </h1>
               <p className="text-[9px] uppercase tracking-[0.3em] text-stone-600 mt-1 font-black">Elite Management</p>
             </div>
