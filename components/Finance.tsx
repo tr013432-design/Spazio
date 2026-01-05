@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { sendMobileNotification } from '../services/notificationService'; // <--- Importação do Serviço
 
 // --- 1. ÍCONES INLINE ---
 const Icons = {
@@ -87,6 +88,21 @@ const Finance: React.FC = () => {
       status: 'PAID'
     };
     setTransactions([newTransaction, ...transactions]);
+    
+    // --- NOTIFICAÇÃO MOBILE ---
+    if (newTransaction.type === 'INCOME') {
+       sendMobileNotification(
+          "Dinheiro no Caixa! 💰",
+          `Entrada de R$ ${newTransaction.amount.toLocaleString('pt-BR')}\nRef: ${newTransaction.description}`
+       );
+    } else {
+       sendMobileNotification(
+          "Nova Despesa Lançada 📉",
+          `Saída de R$ ${newTransaction.amount.toLocaleString('pt-BR')}\nCat: ${newTransaction.category}`
+       );
+    }
+    // -------------------------
+
     setIsModalOpen(false);
     setFormData({ description: '', type: 'INCOME', category: 'Projeto', amount: '', date: new Date().toISOString().split('T')[0] });
   };
