@@ -1,14 +1,18 @@
 import React, { useState, useRef } from 'react';
-import { useReactToPrint } from 'react-to-print'; // Se não tiver, usaremos window.print nativo no botão
+// import { useReactToPrint } from 'react-to-print'; // (Opcional se for instalar a lib)
 
 // Ícones Inline
 const Icons = {
   Printer: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>,
   Check: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"/></svg>,
   Close: () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>,
+  
+  // --- LOGO ATUALIZADO ---
   Logo: () => (
     <div className="flex flex-col items-center">
-      <div className="text-3xl font-serif font-black tracking-tighter text-stone-900">ARCHI<span className="text-stone-400">FLOW</span></div>
+      <div className="text-3xl font-serif font-black tracking-tighter text-stone-900 uppercase">
+        SPAZIO<span className="text-stone-400">ARQUITETURA</span>
+      </div>
       <div className="text-[8px] font-black uppercase tracking-[0.4em] text-stone-500">Elite Management</div>
     </div>
   )
@@ -19,7 +23,7 @@ interface LeadData {
   email: string;
   budget: number;
   notes: string;
-  address?: string; // Adicionado para endereço da obra
+  address?: string; 
 }
 
 interface ProposalProps {
@@ -34,7 +38,6 @@ const ProposalGenerator: React.FC<ProposalProps> = ({ isOpen, onClose, lead }) =
 
   const handlePrint = () => {
     setIsGenerating(true);
-    // Simulação de delay para "processamento"
     setTimeout(() => {
       const printContent = printRef.current;
       const windowUrl = 'about:blank';
@@ -72,7 +75,6 @@ const ProposalGenerator: React.FC<ProposalProps> = ({ isOpen, onClose, lead }) =
 
   if (!isOpen) return null;
 
-  // Calculadora simples de parcelamento para a proposta
   const entryValue = lead.budget * 0.30;
   const installmentValue = (lead.budget * 0.70) / 4;
 
@@ -110,7 +112,7 @@ const ProposalGenerator: React.FC<ProposalProps> = ({ isOpen, onClose, lead }) =
                  <div className="mt-0.5 text-amber-500"><Icons.Check /></div>
                  <div>
                    <p className="text-xs font-bold text-amber-800">Identidade Visual Aplicada</p>
-                   <p className="text-[10px] text-amber-600 mt-1">Logo, fontes e cores do ArchiFlow já configuradas.</p>
+                   <p className="text-[10px] text-amber-600 mt-1">Logo, fontes e cores do Spazio Arquitetura já configuradas.</p>
                  </div>
                </div>
             </div>
@@ -164,7 +166,7 @@ const ProposalGenerator: React.FC<ProposalProps> = ({ isOpen, onClose, lead }) =
                 <p className="text-lg text-stone-500 font-medium">Preparado exclusivamente para <span className="text-stone-900 font-bold">{lead.name}</span></p>
               </section>
 
-              {/* O Desafio (Baseado nas notas do CRM) */}
+              {/* O Desafio */}
               <section className="bg-stone-50 p-8 border-l-4 border-stone-900">
                 <h3 className="text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-4">Briefing & Escopo</h3>
                 <p className="font-serif italic text-stone-700 text-lg leading-relaxed">
@@ -228,10 +230,10 @@ const ProposalGenerator: React.FC<ProposalProps> = ({ isOpen, onClose, lead }) =
               </section>
             </main>
 
-            {/* RODAPÉ */}
+            {/* RODAPÉ ATUALIZADO */}
             <footer className="absolute bottom-[15mm] left-[15mm] right-[15mm] border-t border-stone-200 pt-6 flex justify-between items-center text-xs text-stone-400">
-               <p>ArchiFlow Elite Management © {new Date().getFullYear()}</p>
-               <p>archiflow.app</p>
+               <p>Spazio Arquitetura Elite Management © {new Date().getFullYear()}</p>
+               <p>spazioarquitetura.com.br</p>
             </footer>
 
           </div>
