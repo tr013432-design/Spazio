@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ProposalGenerator from './ProposalGenerator'; // IMPORTANTE: Certifique-se que o arquivo existe na mesma pasta
+import { sendMobileNotification } from '../services/notificationService'; // <--- Importação do Serviço de Notificação
 
 // --- 1. DEFINIÇÕES LOCAIS ---
 
@@ -98,7 +99,7 @@ const CRM: React.FC = () => {
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<string | null>(null);
-  const [isProposalOpen, setIsProposalOpen] = useState(false); // NOVO STATE PARA PROPOSTA
+  const [isProposalOpen, setIsProposalOpen] = useState(false);
   
   // States de Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -179,8 +180,33 @@ const CRM: React.FC = () => {
       tasks: []
     };
     setLeads([newLead, ...leads]);
+    
+    // --- NOTIFICAÇÃO MOBILE ---
+    sendMobileNotification(
+      "Novo Lead Cadastrado! 🚀",
+      `Cliente: ${newLead.name}\nValor: R$ ${newLead.budget?.toLocaleString('pt-BR')}\nFonte: ${newLead.source}`
+    );
+    // -------------------------
+
     setIsModalOpen(false);
     setFormData({ name: '', email: '', phone: '', notes: '', source: 'Instagram', budget: '', temperature: 'warm', nextActionDate: '' });
+  };
+
+  const confirmLoss = () => {
+    if (leadToLoseId) {
+      setLeads(prev => prev.filter(l => l.id !== leadToLoseId));
+      
+      // --- NOTIFICAÇÃO MOBILE ---
+      sendMobileNotification(
+         "Lead Perdido ⚠️",
+         `Motivo: ${lossReason}\nPrecisamos analisar o que houve.`
+      );
+      // -------------------------
+
+      setIsLossModalOpen(false);
+      setLeadToLoseId(null);
+      setLossReason('');
+    }
   };
 
   return (
@@ -415,11 +441,7 @@ const CRM: React.FC = () => {
                 </button>
               ))}
             </div>
-            <button onClick={() => { 
-                setLeads(prev => prev.filter(l => l.id !== leadToLoseId)); 
-                setIsLossModalOpen(false); 
-                setLeadToLoseId(null); 
-            }} className="w-full py-4 bg-red-600 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl hover:bg-red-700 transition-all">Confirmar</button>
+            <button onClick={confirmLoss} className="w-full py-4 bg-red-600 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl hover:bg-red-700 transition-all">Confirmar</button>
             <button onClick={() => setIsLossModalOpen(false)} className="w-full mt-3 text-stone-400 text-[10px] font-bold uppercase tracking-widest">Cancelar</button>
           </div>
         </div>
