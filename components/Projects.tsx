@@ -8,7 +8,8 @@ const Icons = {
   Lock: () => <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>,
   Share: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>,
   ArrowLeft: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>,
-  Camera: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+  Camera: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
+  Trash: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
 };
 
 // --- 2. TIPOS E DEFINIÇÕES ---
@@ -133,7 +134,6 @@ const Projects: React.FC = () => {
 
   // --- ACTIONS (Lógica) ---
 
-  // NOVO: Função para MUDAR A FASE clicando na bolinha
   const handleStageChange = (projectId: string, newStage: ProjectStage) => {
     setProjects(prev => prev.map(p => {
       if (p.id === projectId) {
@@ -142,6 +142,15 @@ const Projects: React.FC = () => {
       return p;
     }));
     showToast(`Projeto movido para: ${newStage}`);
+  };
+
+  // NOVO: Função de Excluir Projeto
+  const handleDeleteProject = (projectId: string) => {
+    if (confirm('⚠️ Atenção: Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita.')) {
+      setProjects(prev => prev.filter(p => p.id !== projectId));
+      setSelectedProjectId(null); // Volta para a lista
+      showToast('Projeto excluído com sucesso.');
+    }
   };
 
   const handleApproveMaterial = (projectId: string, materialId: string) => {
@@ -193,7 +202,7 @@ const Projects: React.FC = () => {
           return (
             <button 
               key={stage} 
-              onClick={() => handleStageChange(projectId, stage)} // AQUI ESTÁ O CLICK MÁGICO
+              onClick={() => handleStageChange(projectId, stage)}
               className="group flex flex-col items-center gap-3 bg-white px-2 focus:outline-none"
             >
               <div className={`
@@ -348,14 +357,25 @@ const Projects: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-8">
                 {/* Header Projeto */}
-                <div className="bg-white p-10 rounded-[40px] border border-stone-200 shadow-sm">
-                  <div className="flex justify-between items-start mb-6">
+                <div className="bg-white p-10 rounded-[40px] border border-stone-200 shadow-sm relative overflow-hidden">
+                  <div className="flex justify-between items-start mb-6 relative z-10">
                     <div>
                       <h2 className="text-4xl font-serif font-bold text-stone-900">{selectedProject?.title}</h2>
                       <p className="text-stone-500 mt-2 font-medium">Cliente: {selectedProject?.clientName}</p>
                     </div>
-                    <div className={`px-4 py-2 rounded-xl border ${selectedProject?.rrtStatus === 'PAID' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-amber-50 border-amber-200 text-amber-700'} text-xs font-bold uppercase`}>
-                      {selectedProject?.rrtStatus === 'PAID' ? `RRT: ${selectedProject.rrtNumber}` : 'RRT Pendente'}
+                    
+                    <div className="flex flex-col items-end gap-2">
+                       <div className={`px-4 py-2 rounded-xl border ${selectedProject?.rrtStatus === 'PAID' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-amber-50 border-amber-200 text-amber-700'} text-xs font-bold uppercase`}>
+                         {selectedProject?.rrtStatus === 'PAID' ? `RRT: ${selectedProject.rrtNumber}` : 'RRT Pendente'}
+                       </div>
+                       
+                       {/* BOTÃO DE EXCLUIR (Danger Zone) */}
+                       <button 
+                         onClick={() => selectedProject && handleDeleteProject(selectedProject.id)}
+                         className="flex items-center gap-2 text-red-400 hover:text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-all text-[9px] font-black uppercase tracking-widest"
+                       >
+                         <Icons.Trash /> Excluir Projeto
+                       </button>
                     </div>
                   </div>
                   
@@ -363,7 +383,7 @@ const Projects: React.FC = () => {
                   {selectedProject && renderInteractiveStepper(selectedProject.stage, selectedProject.id)}
 
                   {/* Ações Rápidas */}
-                  <div className="flex gap-4 mt-8 pt-8 border-t border-stone-100">
+                  <div className="flex gap-4 mt-8 pt-8 border-t border-stone-100 relative z-10">
                       <button onClick={handleIssueRRT} className="flex-1 py-4 border border-stone-200 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-stone-900 hover:bg-stone-50 transition-all">
                          {selectedProject?.rrtStatus === 'PENDING' ? 'Emitir RRT Agora' : 'Baixar RRT'}
                       </button>
