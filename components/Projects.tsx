@@ -10,7 +10,6 @@ const Icons = {
   ArrowLeft: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>,
   Camera: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>,
   Trash: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>,
-  File: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>,
   Upload: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>,
   Close: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
 };
@@ -31,14 +30,6 @@ interface DailyLog {
   imageUrl?: string;
 }
 
-interface MaterialApproval {
-  id: string;
-  name: string;
-  category: string;
-  status: 'APPROVED' | 'PENDING';
-  imageUrl: string;
-}
-
 interface Project {
   id: string;
   clientId: string;
@@ -49,15 +40,12 @@ interface Project {
   rrtNumber?: string;
   startDate: string;
   deadline: string;
-  
   financials: {
     totalValue: number;
     paidValue: number;
     costs: number; 
   };
-
   dailyLogs: DailyLog[];
-  materialApprovals: MaterialApproval[];
 }
 
 // --- 3. DADOS INICIAIS (MOCK) ---
@@ -75,8 +63,7 @@ const initialProjects: Project[] = [
     financials: { totalValue: 45000, paidValue: 30000, costs: 4500 },
     dailyLogs: [
       { id: 'l1', date: '2023-11-20', content: 'Início do assentamento do piso na sala.', imageUrl: 'https://images.unsplash.com/photo-1581858726788-75bc0f6a952d?auto=format&fit=crop&w=800' }
-    ],
-    materialApprovals: []
+    ]
   },
   {
     id: 'p2',
@@ -88,8 +75,7 @@ const initialProjects: Project[] = [
     startDate: '2023-10-01',
     deadline: '2024-03-15',
     financials: { totalValue: 120000, paidValue: 40000, costs: 12000 },
-    dailyLogs: [],
-    materialApprovals: []
+    dailyLogs: []
   }
 ];
 
@@ -97,9 +83,8 @@ const initialProjects: Project[] = [
 const Projects: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'MANAGEMENT' | 'CLIENT'>('MANAGEMENT');
   const [toast, setToast] = useState<string | null>(null);
-  const [isDocsModalOpen, setIsDocsModalOpen] = useState(false); // NOVO STATE
+  const [isDocsModalOpen, setIsDocsModalOpen] = useState(false);
 
   const selectedProject = projects.find(p => p.id === selectedProjectId);
 
@@ -131,19 +116,6 @@ const Projects: React.FC = () => {
       setSelectedProjectId(null);
       showToast('Projeto excluído com sucesso.');
     }
-  };
-
-  const handleApproveMaterial = (projectId: string, materialId: string) => {
-    setProjects(prev => prev.map(p => {
-      if (p.id === projectId) {
-        return {
-          ...p,
-          materialApprovals: p.materialApprovals.map(m => m.id === materialId ? { ...m, status: 'APPROVED' } : m)
-        };
-      }
-      return p;
-    }));
-    showToast("Material aprovado com sucesso!");
   };
 
   const handleIssueRRT = (projectId: string) => {
@@ -196,7 +168,7 @@ const Projects: React.FC = () => {
         </div>
       )}
 
-      {/* --- MODAL DE GERENCIAR DOCS (NOVO) --- */}
+      {/* --- MODAL DE GERENCIAR DOCS --- */}
       {isDocsModalOpen && (
         <div className="fixed inset-0 z-[60] bg-stone-900/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
           <div className="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl animate-slideUp">
@@ -269,7 +241,7 @@ const Projects: React.FC = () => {
               </div>
             </div>
 
-            {/* CARD DE COMPLIANCE (Botão Ativado) */}
+            {/* CARD DE COMPLIANCE */}
             <div className="bg-stone-950 rounded-3xl p-8 text-stone-100 flex flex-col justify-between shadow-xl relative overflow-hidden group">
               <div className="absolute -right-5 -bottom-5 w-32 h-32 bg-stone-800 rounded-full opacity-20 transition-transform group-hover:scale-150 duration-700"></div>
               <div>
@@ -283,7 +255,6 @@ const Projects: React.FC = () => {
                     {projects.filter(p => p.rrtStatus === 'PENDING').length}
                   </span>
                 </div>
-                {/* BOTÃO QUE ABRE O MODAL */}
                 <button 
                   onClick={() => setIsDocsModalOpen(true)}
                   className="w-full py-3 bg-stone-900 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-stone-800 border border-stone-800 transition-colors"
@@ -320,58 +291,102 @@ const Projects: React.FC = () => {
           </div>
         </>
       ) : (
-        /* --- MODO DETALHE (Mantido igual) --- */
+        /* --- MODO DETALHE (APENAS GESTÃO AGORA) --- */
         <div className="animate-fadeIn">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
-            <button onClick={() => setSelectedProjectId(null)} className="flex items-center gap-2 text-stone-400 hover:text-stone-900 font-bold text-xs uppercase tracking-widest transition-colors self-start">
+          <div className="flex justify-start mb-10">
+            <button onClick={() => setSelectedProjectId(null)} className="flex items-center gap-2 text-stone-400 hover:text-stone-900 font-bold text-xs uppercase tracking-widest transition-colors">
               <Icons.ArrowLeft /> Voltar para lista
             </button>
-            <div className="bg-stone-100 p-1 rounded-xl flex gap-1">
-              <button onClick={() => setViewMode('MANAGEMENT')} className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'MANAGEMENT' ? 'bg-white shadow-md text-stone-900' : 'text-stone-500 hover:text-stone-700'}`}>Visão Arquiteto</button>
-              <button onClick={() => setViewMode('CLIENT')} className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'CLIENT' ? 'bg-stone-900 text-white shadow-md' : 'text-stone-500 hover:text-stone-700'}`}>Portal Cliente</button>
-            </div>
           </div>
 
-          {viewMode === 'MANAGEMENT' ? (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-8">
-                <div className="bg-white p-10 rounded-[40px] border border-stone-200 shadow-sm relative overflow-hidden">
-                  <div className="flex justify-between items-start mb-6 relative z-10">
-                    <div>
-                      <h2 className="text-4xl font-serif font-bold text-stone-900">{selectedProject?.title}</h2>
-                      <p className="text-stone-500 mt-2 font-medium">Cliente: {selectedProject?.clientName}</p>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                       <div className={`px-4 py-2 rounded-xl border ${selectedProject?.rrtStatus === 'PAID' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-amber-50 border-amber-200 text-amber-700'} text-xs font-bold uppercase`}>
-                         {selectedProject?.rrtStatus === 'PAID' ? `RRT: ${selectedProject.rrtNumber}` : 'RRT Pendente'}
-                       </div>
-                       <button onClick={() => selectedProject && handleDeleteProject(selectedProject.id)} className="flex items-center gap-2 text-red-400 hover:text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-all text-[9px] font-black uppercase tracking-widest">
-                         <Icons.Trash /> Excluir Projeto
-                       </button>
-                    </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-8">
+              {/* Header Projeto */}
+              <div className="bg-white p-10 rounded-[40px] border border-stone-200 shadow-sm relative overflow-hidden">
+                <div className="flex justify-between items-start mb-6 relative z-10">
+                  <div>
+                    <h2 className="text-4xl font-serif font-bold text-stone-900">{selectedProject?.title}</h2>
+                    <p className="text-stone-500 mt-2 font-medium">Cliente: {selectedProject?.clientName}</p>
                   </div>
-                  {selectedProject && renderInteractiveStepper(selectedProject.stage, selectedProject.id)}
-                  <div className="flex gap-4 mt-8 pt-8 border-t border-stone-100 relative z-10">
-                      <button onClick={() => selectedProject && handleIssueRRT(selectedProject.id)} className="flex-1 py-4 border border-stone-200 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-stone-900 hover:bg-stone-50 transition-all">
-                         {selectedProject?.rrtStatus === 'PENDING' ? 'Emitir RRT Agora' : 'Baixar RRT'}
-                      </button>
-                      <button onClick={handleShareAccess} className="flex-1 py-4 bg-stone-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-stone-800 transition-all flex items-center justify-center gap-2">
-                         <Icons.Share /> Link Cliente
+                  <div className="flex flex-col items-end gap-2">
+                      <div className={`px-4 py-2 rounded-xl border ${selectedProject?.rrtStatus === 'PAID' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-amber-50 border-amber-200 text-amber-700'} text-xs font-bold uppercase`}>
+                        {selectedProject?.rrtStatus === 'PAID' ? `RRT: ${selectedProject.rrtNumber}` : 'RRT Pendente'}
+                      </div>
+                      <button onClick={() => selectedProject && handleDeleteProject(selectedProject.id)} className="flex items-center gap-2 text-red-400 hover:text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-all text-[9px] font-black uppercase tracking-widest">
+                        <Icons.Trash /> Excluir Projeto
                       </button>
                   </div>
                 </div>
-                {/* Diário de Obra e Financeiro mantidos iguais, apenas omitidos para brevidade se não houve mudança neles, mas no código completo eles estão lá */}
+                
+                {/* Stepper Interativo */}
+                {selectedProject && renderInteractiveStepper(selectedProject.stage, selectedProject.id)}
+
+                <div className="flex gap-4 mt-8 pt-8 border-t border-stone-100 relative z-10">
+                    <button onClick={() => selectedProject && handleIssueRRT(selectedProject.id)} className="flex-1 py-4 border border-stone-200 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-stone-900 hover:bg-stone-50 transition-all">
+                        {selectedProject?.rrtStatus === 'PENDING' ? 'Emitir RRT Agora' : 'Baixar RRT'}
+                    </button>
+                    <button onClick={handleShareAccess} className="flex-1 py-4 bg-stone-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-stone-800 transition-all flex items-center justify-center gap-2">
+                        <Icons.Share /> Copiar Link Externo
+                    </button>
+                </div>
+              </div>
+
+              {/* Diário de Obra */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h4 className="text-[12px] font-black uppercase tracking-widest text-stone-400">Diário Técnico</h4>
+                  <button className="text-[10px] font-bold text-stone-900 hover:underline">+ Adicionar Registro</button>
+                </div>
+                {selectedProject?.dailyLogs.map(log => (
+                  <div key={log.id} className="bg-white p-6 rounded-3xl border border-stone-100 flex gap-6 items-start">
+                      <div className="w-24 h-24 rounded-2xl bg-stone-100 flex-shrink-0 overflow-hidden">
+                        {log.imageUrl ? <img src={log.imageUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-stone-300"><Icons.Camera /></div>}
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1">{new Date(log.date).toLocaleDateString('pt-BR')}</p>
+                        <p className="text-stone-800 font-serif italic">"{log.content}"</p>
+                      </div>
+                    </div>
+                ))}
               </div>
             </div>
-          ) : (
-             /* --- VISÃO CLIENTE MANTIDA --- */
-             <div className="bg-stone-950 text-stone-200 rounded-[48px] overflow-hidden min-h-[800px] shadow-2xl relative">
-                <div className="p-12 md:p-20 relative">
-                  <h1 className="text-5xl md:text-7xl font-serif font-bold text-white mb-8">{selectedProject?.title}</h1>
-                  <p className="text-stone-400">Área exclusiva do cliente...</p>
+
+            {/* Coluna Lateral - Financeiro */}
+            <div className="space-y-8">
+              <div className="bg-stone-50 p-8 rounded-[40px] border border-stone-100 sticky top-6">
+                <h4 className="text-[12px] font-black uppercase tracking-widest text-stone-400 mb-6">Raio-X Financeiro</h4>
+                
+                <div className="space-y-6">
+                  <div>
+                    <div className="flex justify-between text-xs font-bold mb-2">
+                      <span className="text-stone-500">Valor Total</span>
+                      <span className="text-stone-900">R$ {selectedProject?.financials.totalValue.toLocaleString('pt-BR')}</span>
+                    </div>
+                    <div className="flex justify-between text-xs font-bold mb-2">
+                      <span className="text-stone-500">Recebido</span>
+                      <span className="text-green-600">R$ {selectedProject?.financials.paidValue.toLocaleString('pt-BR')}</span>
+                    </div>
+                    <div className="w-full h-2 bg-stone-200 rounded-full overflow-hidden">
+                      <div className="bg-green-500 h-full" style={{ width: `${(selectedProject!.financials.paidValue / selectedProject!.financials.totalValue) * 100}%` }}></div>
+                    </div>
+                  </div>
+
+                  <div className="pt-6 border-t border-stone-200">
+                      <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2">Margem Líquida Real</p>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-3xl font-serif font-bold text-stone-900">{calculateMargin(selectedProject!.financials.totalValue, selectedProject!.financials.costs)}%</span>
+                        <span className="text-[10px] text-stone-400">após custos</span>
+                      </div>
+                      <p className="text-xs text-stone-500">Custo realizado: R$ {selectedProject?.financials.costs.toLocaleString('pt-BR')}</p>
+                  </div>
+
+                  <button className="w-full py-4 border-2 border-stone-200 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-stone-900 hover:text-stone-900 transition-all text-stone-400">
+                    Ver Extrato
+                  </button>
                 </div>
-             </div>
-          )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
