@@ -84,7 +84,6 @@ const Projects: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const [isDocsModalOpen, setIsDocsModalOpen] = useState(false);
 
   const selectedProject = projects.find(p => p.id === selectedProjectId);
 
@@ -168,50 +167,6 @@ const Projects: React.FC = () => {
         </div>
       )}
 
-      {/* --- MODAL DE GERENCIAR DOCS --- */}
-      {isDocsModalOpen && (
-        <div className="fixed inset-0 z-[60] bg-stone-900/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl animate-slideUp">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-serif font-bold text-stone-900">Compliance & RRTs</h3>
-              <button onClick={() => setIsDocsModalOpen(false)} className="text-stone-400 hover:text-stone-900"><Icons.Close /></button>
-            </div>
-            
-            <div className="space-y-4">
-              <p className="text-xs text-stone-500 font-medium mb-4">Documentos pendentes que travam o avanço das obras.</p>
-              
-              {projects.filter(p => p.rrtStatus === 'PENDING').length === 0 ? (
-                <div className="text-center py-10 bg-green-50 rounded-2xl border border-green-100">
-                  <div className="text-green-500 mb-2 flex justify-center"><Icons.Check /></div>
-                  <p className="text-sm font-bold text-green-800">Tudo Regularizado!</p>
-                  <p className="text-xs text-green-600">Nenhuma pendência técnica encontrada.</p>
-                </div>
-              ) : (
-                projects.filter(p => p.rrtStatus === 'PENDING').map(project => (
-                  <div key={project.id} className="border border-stone-200 p-4 rounded-2xl flex items-center justify-between hover:border-amber-400 transition-colors bg-stone-50">
-                    <div>
-                      <p className="text-xs font-black uppercase tracking-widest text-amber-600 mb-1">Pendente</p>
-                      <h4 className="font-serif font-bold text-stone-900">{project.title}</h4>
-                      <p className="text-[10px] text-stone-500 mt-1">Ref: {project.clientName}</p>
-                    </div>
-                    <button 
-                      onClick={() => handleIssueRRT(project.id)}
-                      className="bg-stone-900 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-stone-800 flex items-center gap-2"
-                    >
-                      <Icons.Upload /> Enviar RRT
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
-
-            <div className="mt-8 pt-6 border-t border-stone-100 flex justify-end">
-              <button onClick={() => setIsDocsModalOpen(false)} className="text-xs font-bold text-stone-400 hover:text-stone-900 uppercase tracking-widest">Fechar</button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {!selectedProjectId ? (
         <>
           <div className="flex justify-between items-end mb-8">
@@ -224,8 +179,8 @@ const Projects: React.FC = () => {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-10">
-            <div className="lg:col-span-3 bg-white border border-stone-200 rounded-3xl p-8 shadow-sm">
+          <div className="mb-10">
+            <div className="bg-white border border-stone-200 rounded-3xl p-8 shadow-sm">
               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mb-6">Pipeline Operacional</h4>
               <div className="h-48">
                 <ResponsiveContainer width="100%" height="100%">
@@ -238,29 +193,6 @@ const Projects: React.FC = () => {
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* CARD DE COMPLIANCE */}
-            <div className="bg-stone-950 rounded-3xl p-8 text-stone-100 flex flex-col justify-between shadow-xl relative overflow-hidden group">
-              <div className="absolute -right-5 -bottom-5 w-32 h-32 bg-stone-800 rounded-full opacity-20 transition-transform group-hover:scale-150 duration-700"></div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-500 mb-2">Compliance</p>
-                <h4 className="text-xl font-serif">Responsabilidade Técnica</h4>
-              </div>
-              <div className="relative z-10 mt-6">
-                <div className="flex justify-between items-center border-b border-stone-800 pb-2 mb-4">
-                  <span className="text-xs text-stone-400">Pendentes</span>
-                  <span className="text-lg font-bold text-amber-500">
-                    {projects.filter(p => p.rrtStatus === 'PENDING').length}
-                  </span>
-                </div>
-                <button 
-                  onClick={() => setIsDocsModalOpen(true)}
-                  className="w-full py-3 bg-stone-900 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-stone-800 border border-stone-800 transition-colors"
-                >
-                  Gerenciar Docs
-                </button>
               </div>
             </div>
           </div>
@@ -291,7 +223,7 @@ const Projects: React.FC = () => {
           </div>
         </>
       ) : (
-        /* --- MODO DETALHE (APENAS GESTÃO AGORA) --- */
+        /* --- MODO DETALHE (APENAS GESTÃO) --- */
         <div className="animate-fadeIn">
           <div className="flex justify-start mb-10">
             <button onClick={() => setSelectedProjectId(null)} className="flex items-center gap-2 text-stone-400 hover:text-stone-900 font-bold text-xs uppercase tracking-widest transition-colors">
