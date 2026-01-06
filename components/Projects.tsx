@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
-// --- 1. ÍCONES & ASSETS (Inline para evitar erros de importação) ---
+// --- 1. ÍCONES & ASSETS ---
 const Icons = {
   Plus: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/></svg>,
   Check: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"/></svg>,
@@ -273,16 +273,16 @@ const Projects: React.FC = () => {
                 
                 {/* Micro barra de Lucratividade */}
                 <div className="border-t border-stone-100 pt-6">
-                   <div className="flex justify-between items-end mb-2">
-                     <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest">Saúde do Lucro</p>
-                     <p className={`text-[9px] font-bold px-2 py-0.5 rounded ${calculateMargin(project.financials.totalValue, project.financials.costs) > 50 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                        {calculateMargin(project.financials.totalValue, project.financials.costs)}% Margem
-                     </p>
-                  </div>
-                  <div className="relative w-full h-2 bg-stone-100 rounded-full overflow-hidden flex">
-                    <div className="bg-stone-300 h-full" style={{ width: `${(project.financials.costs / project.financials.totalValue) * 100}%` }}></div>
-                    <div className="bg-stone-900 h-full" style={{ width: `${100 - ((project.financials.costs / project.financials.totalValue) * 100)}%` }}></div>
-                  </div>
+                    <div className="flex justify-between items-end mb-2">
+                      <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest">Saúde do Lucro</p>
+                      <p className={`text-[9px] font-bold px-2 py-0.5 rounded ${calculateMargin(project.financials.totalValue, project.financials.costs) > 50 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                         {calculateMargin(project.financials.totalValue, project.financials.costs)}% Margem
+                      </p>
+                   </div>
+                   <div className="relative w-full h-2 bg-stone-100 rounded-full overflow-hidden flex">
+                     <div className="bg-stone-300 h-full" style={{ width: `${(project.financials.costs / project.financials.totalValue) * 100}%` }}></div>
+                     <div className="bg-stone-900 h-full" style={{ width: `${100 - ((project.financials.costs / project.financials.totalValue) * 100)}%` }}></div>
+                   </div>
                 </div>
               </div>
             ))}
@@ -334,12 +334,12 @@ const Projects: React.FC = () => {
 
                   {/* Ações Rápidas */}
                   <div className="flex gap-4 mt-8 pt-8 border-t border-stone-100">
-                     <button onClick={handleIssueRRT} className="flex-1 py-4 border border-stone-200 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-stone-900 hover:bg-stone-50 transition-all">
-                        {selectedProject?.rrtStatus === 'PENDING' ? 'Emitir RRT Agora' : 'Baixar RRT'}
-                     </button>
-                     <button onClick={handleShareAccess} className="flex-1 py-4 bg-stone-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-stone-800 transition-all flex items-center justify-center gap-2">
-                        <Icons.Share /> Link Cliente
-                     </button>
+                      <button onClick={handleIssueRRT} className="flex-1 py-4 border border-stone-200 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-stone-900 hover:bg-stone-50 transition-all">
+                         {selectedProject?.rrtStatus === 'PENDING' ? 'Emitir RRT Agora' : 'Baixar RRT'}
+                      </button>
+                      <button onClick={handleShareAccess} className="flex-1 py-4 bg-stone-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-stone-800 transition-all flex items-center justify-center gap-2">
+                         <Icons.Share /> Link Cliente
+                      </button>
                   </div>
                 </div>
 
@@ -351,14 +351,14 @@ const Projects: React.FC = () => {
                   </div>
                   {selectedProject?.dailyLogs.map(log => (
                     <div key={log.id} className="bg-white p-6 rounded-3xl border border-stone-100 flex gap-6 items-start">
-                       <div className="w-24 h-24 rounded-2xl bg-stone-100 flex-shrink-0 overflow-hidden">
-                         {log.imageUrl ? <img src={log.imageUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-stone-300"><Icons.Camera /></div>}
-                       </div>
-                       <div>
-                         <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1">{new Date(log.date).toLocaleDateString('pt-BR')}</p>
-                         <p className="text-stone-800 font-serif italic">"{log.content}"</p>
-                       </div>
-                    </div>
+                        <div className="w-24 h-24 rounded-2xl bg-stone-100 flex-shrink-0 overflow-hidden">
+                          {log.imageUrl ? <img src={log.imageUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-stone-300"><Icons.Camera /></div>}
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1">{new Date(log.date).toLocaleDateString('pt-BR')}</p>
+                          <p className="text-stone-800 font-serif italic">"{log.content}"</p>
+                        </div>
+                     </div>
                   ))}
                 </div>
               </div>
@@ -411,24 +411,24 @@ const Projects: React.FC = () => {
                  <h1 className="text-5xl md:text-7xl font-serif font-bold text-white mb-8">{selectedProject?.title}</h1>
                  
                  <div className="flex flex-col md:flex-row gap-12 border-t border-white/10 pt-12">
-                    <div>
-                       <p className="text-[10px] font-black uppercase tracking-widest text-stone-500 mb-2">Previsão de Entrega</p>
-                       <p className="text-3xl font-serif text-white">{new Date(selectedProject?.deadline || '').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</p>
-                    </div>
-                    <div>
-                       <p className="text-[10px] font-black uppercase tracking-widest text-stone-500 mb-2">Status Atual</p>
-                       <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                          <p className="text-xl font-serif text-white">{selectedProject?.stage}</p>
-                       </div>
-                    </div>
+                   <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-stone-500 mb-2">Previsão de Entrega</p>
+                      <p className="text-3xl font-serif text-white">{new Date(selectedProject?.deadline || '').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</p>
+                   </div>
+                   <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-stone-500 mb-2">Status Atual</p>
+                      <div className="flex items-center gap-2">
+                         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                         <p className="text-xl font-serif text-white">{selectedProject?.stage}</p>
+                      </div>
+                   </div>
                  </div>
               </div>
 
               {/* Feed de Atualizações */}
               <div className="bg-stone-900 p-12 md:p-20">
                  <h3 className="text-[12px] font-black uppercase tracking-[0.3em] text-stone-500 mb-12 flex items-center gap-4">
-                    Diário da Obra <div className="h-[1px] bg-stone-800 flex-1"></div>
+                   Diário da Obra <div className="h-[1px] bg-stone-800 flex-1"></div>
                  </h3>
                  
                  <div className="space-y-16 border-l border-stone-800 pl-8 md:pl-16 relative">
@@ -455,7 +455,7 @@ const Projects: React.FC = () => {
               {/* Aprovações */}
               <div className="p-12 md:p-20 bg-stone-950">
                  <h3 className="text-[12px] font-black uppercase tracking-[0.3em] text-stone-500 mb-12 flex items-center gap-4">
-                    Aprovações Pendentes <div className="h-[1px] bg-stone-800 flex-1"></div>
+                   Aprovações Pendentes <div className="h-[1px] bg-stone-800 flex-1"></div>
                  </h3>
                  
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
