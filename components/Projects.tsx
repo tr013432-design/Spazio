@@ -84,6 +84,10 @@ const Projects: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  
+  // ESTADOS DOS MODAIS
+  const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
+  const [newProjectData, setNewProjectData] = useState({ title: '', client: '', value: '', deadline: '' });
 
   const selectedProject = projects.find(p => p.id === selectedProjectId);
 
@@ -92,7 +96,7 @@ const Projects: React.FC = () => {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const calculateMargin = (total: number, costs: number) => Math.round(((total - costs) / total) * 100);
+  const calculateMargin = (total: number, costs: number) => total > 0 ? Math.round(((total - costs) / total) * 100) : 0;
 
   const stageDistribution = useMemo(() => {
     const stages = Object.values(ProjectStage);
@@ -103,6 +107,35 @@ const Projects: React.FC = () => {
   }, [projects]);
 
   // --- ACTIONS ---
+
+  const handleCreateProject = () => {
+    if (!newProjectData.title || !newProjectData.client) {
+      showToast('Preencha pelo menos o Nome do Projeto e Cliente.');
+      return;
+    }
+
+    const newProject: Project = {
+      id: `p${Date.now()}`,
+      clientId: `c${Date.now()}`,
+      title: newProjectData.title,
+      clientName: newProjectData.client,
+      stage: ProjectStage.BRIEFING, // Começa sempre no Briefing
+      rrtStatus: 'PENDING',
+      startDate: new Date().toISOString().split('T')[0],
+      deadline: newProjectData.deadline || '2024-12-31',
+      financials: {
+        totalValue: Number(newProjectData.value) || 0,
+        paidValue: 0,
+        costs: 0
+      },
+      dailyLogs: []
+    };
+
+    setProjects([...projects, newProject]);
+    setIsNewProjectModalOpen(false);
+    setNewProjectData({ title: '', client: '', value: '', deadline: '' }); // Limpa form
+    showToast('Novo Projeto cadastrado com sucesso!');
+  };
 
   const handleStageChange = (projectId: string, newStage: ProjectStage) => {
     setProjects(prev => prev.map(p => p.id === projectId ? { ...p, stage: newStage } : p));
@@ -160,10 +193,78 @@ const Projects: React.FC = () => {
   return (
     <div className="space-y-6 animate-fadeIn relative pb-20">
       
+      {/* TOAST DE NOTIFICAÇÃO */}
       {toast && (
         <div className="fixed top-6 right-6 z-[100] bg-stone-900 text-white px-6 py-3 rounded-xl shadow-2xl animate-slideUp font-bold text-xs flex items-center gap-3">
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
           {toast}
+        </div>
+      )}
+
+      {/* --- MODAL NOVO PROJETO --- */}
+      {isNewProjectModalOpen && (
+        <div className="fixed inset-0 z-[60] bg-stone-900/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl animate-slideUp relative">
+            <button onClick={() => setIsNewProjectModalOpen(false)} className="absolute top-6 right-6 text-stone-400 hover:text-stone-900"><Icons.Close /></button>
+            
+            <div className="mb-6">
+              <p className="text-[10px] font-black uppercase tracking-widest text-stone-500 mb-2">Novo Contrato</p>
+              <h3 className="text-3xl font-serif font-bold text-stone-900">Cadastrar Projeto</h3>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-[10px] font-bold uppercase text-stone-400 tracking-wider mb-1 block">Nome do Projeto</label>
+                <input 
+                  type="text" 
+                  placeholder="Ex: Reforma Cobertura Leblon"
+                  className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-stone-900 transition-colors"
+                  value={newProjectData.title}
+                  onChange={(e) => setNewProjectData({...newProjectData, title: e.target.value})}
+                />
+              </div>
+              
+              <div>
+                <label className="text-[10px] font-bold uppercase text-stone-400 tracking-wider mb-1 block">Nome do Cliente</label>
+                <input 
+                  type="text" 
+                  placeholder="Ex: Dr. Roberto Campos"
+                  className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-stone-900 transition-colors"
+                  value={newProjectData.client}
+                  onChange={(e) => setNewProjectData({...newProjectData, client: e.target.value})}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-bold uppercase text-stone-400 tracking-wider mb-1 block">Valor Total (R$)</label>
+                  <input 
+                    type="number" 
+                    placeholder="0.00"
+                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-stone-900 transition-colors"
+                    value={newProjectData.value}
+                    onChange={(e) => setNewProjectData({...newProjectData, value: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold uppercase text-stone-400 tracking-wider mb-1 block">Prazo de Entrega</label>
+                  <input 
+                    type="date" 
+                    className="w-full bg-stone-50 border border-stone-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-stone-900 transition-colors"
+                    value={newProjectData.deadline}
+                    onChange={(e) => setNewProjectData({...newProjectData, deadline: e.target.value})}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button 
+              onClick={handleCreateProject}
+              className="w-full mt-8 bg-stone-900 text-white py-4 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-stone-800 transition-all shadow-lg active:scale-95"
+            >
+              Criar Projeto
+            </button>
+          </div>
         </div>
       )}
 
@@ -174,7 +275,11 @@ const Projects: React.FC = () => {
               <h2 className="text-3xl font-serif text-stone-900">Portfólio & Execução</h2>
               <p className="text-stone-500 text-sm mt-1">Governança de canteiro e controle financeiro.</p>
             </div>
-            <button className="bg-stone-900 text-white px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-widest shadow-lg hover:bg-stone-800 transition-all active:scale-95 flex items-center gap-2">
+            {/* BOTÃO ATIVADO AQUI */}
+            <button 
+              onClick={() => setIsNewProjectModalOpen(true)}
+              className="bg-stone-900 text-white px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-widest shadow-lg hover:bg-stone-800 transition-all active:scale-95 flex items-center gap-2"
+            >
               <Icons.Plus /> Novo Projeto
             </button>
           </div>
@@ -214,8 +319,8 @@ const Projects: React.FC = () => {
                       </p>
                    </div>
                    <div className="relative w-full h-2 bg-stone-100 rounded-full overflow-hidden flex">
-                     <div className="bg-stone-300 h-full" style={{ width: `${(project.financials.costs / project.financials.totalValue) * 100}%` }}></div>
-                     <div className="bg-stone-900 h-full" style={{ width: `${100 - ((project.financials.costs / project.financials.totalValue) * 100)}%` }}></div>
+                     <div className="bg-stone-300 h-full" style={{ width: `${project.financials.totalValue > 0 ? (project.financials.costs / project.financials.totalValue) * 100 : 0}%` }}></div>
+                     <div className="bg-stone-900 h-full" style={{ width: `${project.financials.totalValue > 0 ? 100 - ((project.financials.costs / project.financials.totalValue) * 100) : 0}%` }}></div>
                    </div>
                 </div>
               </div>
@@ -223,7 +328,7 @@ const Projects: React.FC = () => {
           </div>
         </>
       ) : (
-        /* --- MODO DETALHE (APENAS GESTÃO) --- */
+        /* --- MODO DETALHE --- */
         <div className="animate-fadeIn">
           <div className="flex justify-start mb-10">
             <button onClick={() => setSelectedProjectId(null)} className="flex items-center gap-2 text-stone-400 hover:text-stone-900 font-bold text-xs uppercase tracking-widest transition-colors">
@@ -250,7 +355,6 @@ const Projects: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Stepper Interativo */}
                 {selectedProject && renderInteractiveStepper(selectedProject.stage, selectedProject.id)}
 
                 <div className="flex gap-4 mt-8 pt-8 border-t border-stone-100 relative z-10">
@@ -299,7 +403,7 @@ const Projects: React.FC = () => {
                       <span className="text-green-600">R$ {selectedProject?.financials.paidValue.toLocaleString('pt-BR')}</span>
                     </div>
                     <div className="w-full h-2 bg-stone-200 rounded-full overflow-hidden">
-                      <div className="bg-green-500 h-full" style={{ width: `${(selectedProject!.financials.paidValue / selectedProject!.financials.totalValue) * 100}%` }}></div>
+                      <div className="bg-green-500 h-full" style={{ width: `${selectedProject!.financials.totalValue > 0 ? (selectedProject!.financials.paidValue / selectedProject!.financials.totalValue) * 100 : 0}%` }}></div>
                     </div>
                   </div>
 
