@@ -9,7 +9,8 @@ const Icons = {
   Calendar: ({ className }: { className?: string }) => <svg className={className || "w-4 h-4"} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>,
   WhatsApp: () => <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>,
   Trash: () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>,
-  Pencil: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg> // NOVO ÍCONE
+  Pencil: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>,
+  Map: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
 };
 
 const LeadStatus = {
@@ -41,7 +42,7 @@ interface Lead {
   createdAt: string;
   notes: string;
   budget: number;
-  address?: string;
+  address?: string; // CAMPO NOVO
   taxId?: string;
   tasks: Task[];
 }
@@ -102,15 +103,22 @@ const CRM: React.FC = () => {
   
   // States de Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false); // NOVO STATE
+  const [isEditing, setIsEditing] = useState(false);
   const [isLossModalOpen, setIsLossModalOpen] = useState(false);
   const [leadToLoseId, setLeadToLoseId] = useState<string | null>(null);
   const [lossReason, setLossReason] = useState('');
 
-  // Form Data Novo/Edit Lead
+  // Form Data Expandido
   const [formData, setFormData] = useState({
-    name: '', email: '', phone: '', notes: '', source: 'Instagram', budget: '', 
-    temperature: 'warm' as LeadTemperature, nextActionDate: ''
+    name: '', 
+    email: '', 
+    phone: '', 
+    address: '', // NOVO
+    notes: '', 
+    source: 'Instagram', 
+    budget: '', 
+    temperature: 'warm' as LeadTemperature, 
+    nextActionDate: ''
   });
 
   const selectedLead = leads.find(l => l.id === selectedLeadId);
@@ -168,13 +176,13 @@ const CRM: React.FC = () => {
     setDragOverStatus(null);
   };
 
-  // NOVO: Função para abrir modal de edição preenchido
   const handleEditLead = () => {
     if (!selectedLead) return;
     setFormData({
       name: selectedLead.name,
       email: selectedLead.email,
       phone: selectedLead.phone,
+      address: selectedLead.address || '',
       notes: selectedLead.notes,
       source: selectedLead.source,
       budget: String(selectedLead.budget),
@@ -185,9 +193,18 @@ const CRM: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  // NOVO: Função para resetar modal ao abrir para criar novo
   const handleOpenNewLead = () => {
-    setFormData({ name: '', email: '', phone: '', notes: '', source: 'Instagram', budget: '', temperature: 'warm', nextActionDate: '' });
+    setFormData({ 
+      name: '', 
+      email: '', 
+      phone: '', 
+      address: '', 
+      notes: '', 
+      source: 'Instagram', 
+      budget: '', 
+      temperature: 'warm', 
+      nextActionDate: '' 
+    });
     setIsEditing(false);
     setIsModalOpen(true);
   };
@@ -196,7 +213,6 @@ const CRM: React.FC = () => {
     e.preventDefault();
     
     if (isEditing && selectedLeadId) {
-      // MODO EDIÇÃO
       setLeads(prev => prev.map(l => l.id === selectedLeadId ? {
         ...l,
         ...formData,
@@ -204,7 +220,6 @@ const CRM: React.FC = () => {
       } : l));
       sendMobileNotification("Lead Atualizado! 📝", `Cliente: ${formData.name}`);
     } else {
-      // MODO CRIAÇÃO (NOVO)
       const newLead: Lead = {
         id: Math.random().toString(36).substr(2, 9),
         ...formData,
@@ -337,7 +352,7 @@ const CRM: React.FC = () => {
         </div>
       )}
 
-      {/* --- SLIDE-OVER DE DETALHES + BOTÃO PROPOSTA --- */}
+      {/* --- SLIDE-OVER DE DETALHES --- */}
       {selectedLead && (
         <div className="fixed inset-0 z-[60] flex justify-end">
            <div className="absolute inset-0 bg-stone-900/30 backdrop-blur-sm transition-opacity" onClick={() => setSelectedLeadId(null)}></div>
@@ -356,20 +371,17 @@ const CRM: React.FC = () => {
                 </div>
                 
                 <div className="flex items-center gap-3">
-                    {/* BOTÃO EDITAR ADICIONADO AQUI */}
                     <button 
                       onClick={handleEditLead}
                       className="flex items-center gap-1.5 px-4 py-2 bg-stone-200 text-stone-700 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-stone-300 transition-colors"
                     >
                       <Icons.Pencil /> Editar
                     </button>
-                    
                     <button onClick={() => setSelectedLeadId(null)} className="p-2 hover:bg-stone-200 rounded-full transition-colors text-stone-500">✕</button>
                 </div>
               </div>
 
               <div className="p-8 space-y-8">
-                 {/* Seção de Ação Rápida */}
                  <div className="grid grid-cols-2 gap-4">
                     <button 
                       onClick={() => { window.open(`https://wa.me/55${selectedLead.phone.replace(/\D/g,'')}`, '_blank'); }}
@@ -386,24 +398,46 @@ const CRM: React.FC = () => {
                     </button>
                  </div>
 
-                 {/* Dados do Lead */}
-                 <div className="space-y-4">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-stone-400 border-b border-stone-100 pb-2">Informações</h4>
-                    <div className="grid grid-cols-2 gap-6">
-                       <div>
-                          <p className="text-[10px] text-stone-400 font-bold uppercase">Budget</p>
-                          <p className="text-lg font-serif font-bold text-stone-800">R$ {selectedLead.budget.toLocaleString('pt-BR')}</p>
-                       </div>
-                       <div>
-                          <p className="text-[10px] text-stone-400 font-bold uppercase">Próximo Passo</p>
-                          <p className={`text-sm font-bold ${isOverdue(selectedLead.nextActionDate) ? 'text-red-500' : 'text-stone-800'}`}>
-                             {selectedLead.nextActionDate ? new Date(selectedLead.nextActionDate).toLocaleDateString() : '-'}
-                          </p>
-                       </div>
-                       <div className="col-span-2">
-                          <p className="text-[10px] text-stone-400 font-bold uppercase mb-1">Notas / Briefing</p>
-                          <p className="text-sm text-stone-600 bg-stone-50 p-4 rounded-xl italic">"{selectedLead.notes}"</p>
-                       </div>
+                 <div className="space-y-6">
+                    {/* INFO PRINCIPAL */}
+                    <div>
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-stone-400 border-b border-stone-100 pb-2 mb-4">Dados Principais</h4>
+                        <div className="grid grid-cols-2 gap-6">
+                           <div>
+                              <p className="text-[10px] text-stone-400 font-bold uppercase">Budget</p>
+                              <p className="text-lg font-serif font-bold text-stone-800">R$ {selectedLead.budget.toLocaleString('pt-BR')}</p>
+                           </div>
+                           <div>
+                              <p className="text-[10px] text-stone-400 font-bold uppercase">Origem</p>
+                              <p className="text-sm font-bold text-stone-700">{selectedLead.source}</p>
+                           </div>
+                        </div>
+                    </div>
+
+                    {/* CONTATO & LOCAL */}
+                    <div>
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-stone-400 border-b border-stone-100 pb-2 mb-4">Contato & Local</h4>
+                        <div className="space-y-4">
+                           <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-400"><Icons.Map /></div>
+                              <div>
+                                 <p className="text-[9px] font-bold uppercase text-stone-400">Local da Obra</p>
+                                 <p className="text-sm font-medium text-stone-800">{selectedLead.address || 'Não informado'}</p>
+                              </div>
+                           </div>
+                           <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-400">@</div>
+                              <div>
+                                 <p className="text-[9px] font-bold uppercase text-stone-400">Email</p>
+                                 <p className="text-sm font-medium text-stone-800">{selectedLead.email || 'Não informado'}</p>
+                              </div>
+                           </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-stone-400 border-b border-stone-100 pb-2 mb-4">Notas & Briefing</h4>
+                        <p className="text-sm text-stone-600 bg-stone-50 p-4 rounded-xl italic">"{selectedLead.notes}"</p>
                     </div>
                  </div>
               </div>
@@ -426,21 +460,37 @@ const CRM: React.FC = () => {
         />
       )}
 
-      {/* MODAL NOVO/EDITAR LEAD (REUTILIZADO) */}
+      {/* MODAL NOVO/EDITAR LEAD (EXPANDIDO) */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-md">
           <div className="bg-white w-full max-w-lg rounded-[30px] shadow-2xl overflow-hidden animate-slideUp">
             <div className="p-8 border-b border-stone-100 flex justify-between items-center">
-               {/* TÍTULO DINÂMICO */}
                <h4 className="text-2xl font-bold font-serif">{isEditing ? 'Editar Lead' : 'Novo Lead'}</h4>
                <button onClick={() => setIsModalOpen(false)} className="text-stone-400 hover:text-stone-900 font-bold">✕</button>
             </div>
             <form onSubmit={handleLeadSubmit} className="p-8 space-y-4 max-h-[80vh] overflow-y-auto">
-               <input required placeholder="Nome do Cliente" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200 outline-none focus:border-stone-900" />
                
+               <input required placeholder="Nome do Cliente" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200 outline-none focus:border-stone-900 transition-colors" />
+               
+               {/* LINHA DE CONTATO */}
                <div className="grid grid-cols-2 gap-4">
-                 <input placeholder="WhatsApp (apenas números)" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200 outline-none focus:border-stone-900" />
-                 <input type="number" placeholder="Budget Estimado" value={formData.budget} onChange={e => setFormData({...formData, budget: e.target.value})} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200 outline-none focus:border-stone-900" />
+                 <input placeholder="WhatsApp (apenas números)" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200 outline-none focus:border-stone-900 transition-colors" />
+                 <input type="email" placeholder="Email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200 outline-none focus:border-stone-900 transition-colors" />
+               </div>
+
+               {/* LOCALIZAÇÃO (NOVO) */}
+               <input placeholder="Endereço / Local da Obra" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200 outline-none focus:border-stone-900 transition-colors" />
+               
+               {/* ORIGEM E BUDGET (NOVO SELECT) */}
+               <div className="grid grid-cols-2 gap-4">
+                 <select value={formData.source} onChange={e => setFormData({...formData, source: e.target.value})} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200 text-stone-600 outline-none focus:border-stone-900">
+                    <option value="Instagram">Instagram</option>
+                    <option value="Google">Google / Site</option>
+                    <option value="Indicação">Indicação</option>
+                    <option value="Pinterest">Pinterest</option>
+                    <option value="Outros">Outros</option>
+                 </select>
+                 <input type="number" placeholder="Budget (R$)" value={formData.budget} onChange={e => setFormData({...formData, budget: e.target.value})} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200 outline-none focus:border-stone-900 transition-colors" />
                </div>
                
                <div className="grid grid-cols-2 gap-4">
@@ -460,7 +510,6 @@ const CRM: React.FC = () => {
 
                <textarea placeholder="Notas sobre o projeto..." value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200 h-24 resize-none outline-none focus:border-stone-900" />
                
-               {/* BOTÃO DINÂMICO */}
                <button type="submit" className="w-full py-4 bg-stone-900 text-white font-bold rounded-xl uppercase tracking-widest text-xs hover:bg-stone-800 transition-all shadow-xl active:scale-95">
                  {isEditing ? 'Salvar Alterações' : 'Cadastrar Lead'}
                </button>
