@@ -56,17 +56,8 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab }) =>
             ))}
           </nav>
 
-          <div className="p-6 border-t border-stone-900 bg-stone-950/50">
-            <div className="flex items-center gap-4 p-3 rounded-2xl bg-stone-900/40">
-              <div className="w-10 h-10 rounded-xl bg-stone-100 text-stone-900 flex items-center justify-center font-bold shadow-inner">
-                JS
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold truncate">Julia Soares</p>
-                <p className="text-[10px] text-stone-600 uppercase font-black">Senior Partner</p>
-              </div>
-            </div>
-          </div>
+          {/* PERFIL REMOVIDO DAQUI */}
+          
         </aside>
       )}
 
