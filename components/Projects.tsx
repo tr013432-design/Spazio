@@ -50,7 +50,7 @@ interface Project {
   financials: {
     totalValue: number;
     paidValue: number;
-    costs: number; // Custos operacionais (render, plotagem, visitas)
+    costs: number; 
   };
 
   dailyLogs: DailyLog[];
@@ -131,7 +131,19 @@ const Projects: React.FC = () => {
     }));
   }, [projects]);
 
-  // Actions
+  // --- ACTIONS (Lógica) ---
+
+  // NOVO: Função para MUDAR A FASE clicando na bolinha
+  const handleStageChange = (projectId: string, newStage: ProjectStage) => {
+    setProjects(prev => prev.map(p => {
+      if (p.id === projectId) {
+        return { ...p, stage: newStage };
+      }
+      return p;
+    }));
+    showToast(`Projeto movido para: ${newStage}`);
+  };
+
   const handleApproveMaterial = (projectId: string, materialId: string) => {
     setProjects(prev => prev.map(p => {
       if (p.id === projectId) {
@@ -163,27 +175,45 @@ const Projects: React.FC = () => {
     showToast("Link do Portal do Cliente copiado!");
   };
 
-  // Renderiza o Stepper Visual
-  const renderStepper = (currentStage: ProjectStage) => {
+  // --- STEPPER INTERATIVO ---
+  const renderInteractiveStepper = (currentStage: ProjectStage, projectId: string) => {
     const stages = Object.values(ProjectStage);
     const currentIndex = stages.indexOf(currentStage);
 
     return (
-      <div className="flex justify-between items-center relative my-8">
-        <div className="absolute top-1/2 left-0 w-full h-0.5 bg-stone-100 -z-10 transform -translate-y-1/2"></div>
+      <div className="flex justify-between items-center relative my-8 px-4">
+        {/* Linha de Fundo */}
+        <div className="absolute top-1/2 left-4 right-4 h-0.5 bg-stone-100 -z-10 transform -translate-y-1/2"></div>
+        
         {stages.map((stage, index) => {
           const isCompleted = index < currentIndex;
           const isCurrent = index === currentIndex;
+          const isFuture = index > currentIndex;
+
           return (
-            <div key={stage} className="flex flex-col items-center gap-2 bg-white px-2">
+            <button 
+              key={stage} 
+              onClick={() => handleStageChange(projectId, stage)} // AQUI ESTÁ O CLICK MÁGICO
+              className="group flex flex-col items-center gap-3 bg-white px-2 focus:outline-none"
+            >
               <div className={`
-                w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-500
-                ${isCompleted ? 'bg-stone-900 border-stone-900 text-white' : isCurrent ? 'bg-white border-stone-900 scale-125 shadow-lg' : 'bg-stone-50 border-stone-200 text-stone-300'}
+                w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300
+                ${isCompleted ? 'bg-stone-900 border-stone-900 text-white hover:bg-stone-800' : ''}
+                ${isCurrent ? 'bg-white border-stone-900 scale-125 shadow-xl text-stone-900 ring-4 ring-stone-50' : ''}
+                ${isFuture ? 'bg-stone-50 border-stone-200 text-stone-300 hover:border-stone-400 hover:text-stone-400' : ''}
               `}>
-                {isCompleted ? <Icons.Check /> : isCurrent ? <div className="w-2.5 h-2.5 bg-stone-900 rounded-full animate-pulse"></div> : <Icons.Lock />}
+                {isCompleted && <Icons.Check />}
+                {isCurrent && <div className="w-3 h-3 bg-stone-900 rounded-full animate-pulse"></div>}
+                {isFuture && <Icons.Lock />}
               </div>
-              <span className={`text-[9px] font-black uppercase tracking-widest ${isCurrent ? 'text-stone-900' : 'text-stone-300'}`}>{stage}</span>
-            </div>
+              
+              <span className={`
+                text-[9px] font-black uppercase tracking-widest transition-colors
+                ${isCurrent ? 'text-stone-900 font-bold' : 'text-stone-300 group-hover:text-stone-500'}
+              `}>
+                {stage}
+              </span>
+            </button>
           );
         })}
       </div>
@@ -329,8 +359,8 @@ const Projects: React.FC = () => {
                     </div>
                   </div>
                   
-                  {/* Stepper */}
-                  {selectedProject && renderStepper(selectedProject.stage)}
+                  {/* STEPPER INTERATIVO */}
+                  {selectedProject && renderInteractiveStepper(selectedProject.stage, selectedProject.id)}
 
                   {/* Ações Rápidas */}
                   <div className="flex gap-4 mt-8 pt-8 border-t border-stone-100">
