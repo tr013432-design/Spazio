@@ -1,4 +1,3 @@
-
 export enum LeadStatus {
   PROSPECTION = 'Prospecção',
   TECHNICAL_VISIT = 'Visita Técnica',
@@ -10,9 +9,9 @@ export enum LeadStatus {
 export enum ProjectStage {
   BRIEFING = 'Briefing',
   CONCEPT = 'Anteprojeto',
-  TECHNICAL = 'Executivo',
-  CONSTRUCTION = 'Obra/Acompanhamento',
-  COMPLETED = 'Finalizado'
+  EXECUTIVE = 'Executivo',
+  CONSTRUCTION = 'Obra',
+  DELIVERY = 'Entrega'
 }
 
 export interface Task {
@@ -24,9 +23,11 @@ export interface Task {
 
 export interface DailyLog {
   id: string;
-  date: string;
+  project_id: string;
+  log_date: string;
   content: string;
-  imageUrl?: string;
+  image_url?: string;
+  created_at: string;
 }
 
 export interface MaterialApproval {
@@ -39,18 +40,20 @@ export interface MaterialApproval {
 
 export interface Project {
   id: string;
-  clientId: string;
   title: string;
-  stage: ProjectStage;
-  startDate: string;
-  deadline: string;
-  totalValue: number;
-  paidValue: number;
-  progress: number;
-  rrtStatus: 'PENDING' | 'ISSUED' | 'PAID';
-  rrtNumber?: string;
-  dailyLogs: DailyLog[];
-  materialApprovals: MaterialApproval[];
+  client_name: string;
+  stage: string;
+  rrt_status: string;
+  rrt_number?: string;
+  start_date: string;
+  deadline?: string;
+  total_value: number;
+  paid_value: number;
+  costs: number;
+  cover_image_url?: string;
+  created_at: string;
+  updated_at: string;
+  daily_logs?: DailyLog[];
 }
 
 export interface Lead {
@@ -58,14 +61,16 @@ export interface Lead {
   name: string;
   email: string;
   phone: string;
-  source: string;
-  status: LeadStatus;
-  budget?: number;
-  notes: string;
-  createdAt: string;
-  tasks: Task[];
   address?: string;
-  taxId?: string;
+  source: string;
+  status: string;
+  temperature?: string;
+  budget: number;
+  notes: string;
+  next_action_date?: string;
+  created_at: string;
+  updated_at: string;
+  tasks?: Task[];
 }
 
 export interface Transaction {
