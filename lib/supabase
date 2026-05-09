@@ -5,18 +5,15 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-export type LeadTemperature = 'hot' | 'warm' | 'cold';
-
 export interface Lead {
   id: string;
   name: string;
   email: string;
   phone: string;
   address?: string;
-  tax_id?: string;
   source: string;
   status: string;
-  temperature?: LeadTemperature;
+  temperature?: string;
   budget: number;
   notes: string;
   next_action_date?: string;
@@ -38,7 +35,7 @@ export interface Project {
   title: string;
   client_name: string;
   stage: string;
-  rrt_status: 'PAID' | 'PENDING';
+  rrt_status: string;
   rrt_number?: string;
   start_date: string;
   deadline?: string;
@@ -64,9 +61,11 @@ export interface Transaction {
   id: string;
   description: string;
   amount: number;
-  type: 'income' | 'expense';
+  type: string;
   category?: string;
   project_id?: string;
   transaction_date: string;
   created_at: string;
 }
+
+export type LeadTemperature = string;
