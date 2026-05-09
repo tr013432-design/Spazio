@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { supabase, Lead, LeadTemperature } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import ProposalGenerator from './ProposalGenerator';
 import { sendMobileNotification } from '../services/notificationService';
 
