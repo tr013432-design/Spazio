@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../services/supabase';
+import { Lead, LeadStatus } from '../types';
 import ProposalGenerator from './ProposalGenerator';
 import { sendMobileNotification } from '../services/notificationService';
 
@@ -13,94 +14,86 @@ const Icons = {
   Spinner: () => <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>,
 };
 
-const LeadStatus = {
-  PROSPECTION: 'Prospecção',
-  TECHNICAL_VISIT: 'Visita Técnica',
-  BRIEFING: 'Briefing',
-  CONCEPT: 'Anteprojeto',
-  SIGNED: 'Contrato Assinado',
-};
+var STATUS_LIST = [
+  LeadStatus.PROSPECTION,
+  LeadStatus.TECHNICAL_VISIT,
+  LeadStatus.BRIEFING,
+  LeadStatus.CONCEPT,
+  LeadStatus.SIGNED,
+];
 
-const CRM: React.FC = () => {
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
-  const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
-  const [dragOverStatus, setDragOverStatus] = useState<string | null>(null);
-  const [isProposalOpen, setIsProposalOpen] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [isLossModalOpen, setIsLossModalOpen] = useState(false);
-  const [leadToLoseId, setLeadToLoseId] = useState<string | null>(null);
-  const [lossReason, setLossReason] = useState('');
-
-  const [formData, setFormData] = useState({
+var CRM: React.FC = () => {
+  var [leads, setLeads] = useState<Lead[]>([]);
+  var [loading, setLoading] = useState(true);
+  var [saving, setSaving] = useState(false);
+  var [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
+  var [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
+  var [dragOverStatus, setDragOverStatus] = useState<string | null>(null);
+  var [isProposalOpen, setIsProposalOpen] = useState(false);
+  var [isModalOpen, setIsModalOpen] = useState(false);
+  var [isEditing, setIsEditing] = useState(false);
+  var [isLossModalOpen, setIsLossModalOpen] = useState(false);
+  var [leadToLoseId, setLeadToLoseId] = useState<string | null>(null);
+  var [lossReason, setLossReason] = useState('');
+  var [formData, setFormData] = useState({
     name: '', email: '', phone: '', address: '', notes: '',
-    source: 'Instagram', budget: '', temperature: 'warm' as LeadTemperature, nextActionDate: ''
+    source: 'Instagram', budget: '', temperature: 'warm', nextActionDate: ''
   });
 
-  const fetchLeads = useCallback(async () => {
+  var fetchLeads = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('leads')
-      .select('*, tasks:lead_tasks(*)')
-      .order('created_at', { ascending: false });
-    if (!error && data) setLeads(data as Lead[]);
+    var result = await supabase.from('leads').select('*, tasks:lead_tasks(*)').order('created_at', { ascending: false });
+    if (!result.error && result.data) setLeads(result.data as Lead[]);
     setLoading(false);
   }, []);
 
   useEffect(() => { fetchLeads(); }, [fetchLeads]);
 
-  const selectedLead = leads.find(l => l.id === selectedLeadId);
-  const visibleStatuses = Object.values(LeadStatus);
+  var selectedLead = leads.find(function(l) { return l.id === selectedLeadId; });
 
-  const isOverdue = (dateString?: string) => {
+  var isOverdue = function(dateString?: string) {
     if (!dateString) return false;
-    const today = new Date(); today.setHours(0,0,0,0);
+    var today = new Date(); today.setHours(0,0,0,0);
     return new Date(dateString) < today;
   };
 
-  const getTempColor = (temp?: LeadTemperature) => {
-    switch(temp) {
-      case 'hot': return 'bg-red-100 text-red-700 border-red-200';
-      case 'cold': return 'bg-blue-100 text-blue-700 border-blue-200';
-      default: return 'bg-amber-100 text-amber-700 border-amber-200';
-    }
+  var getTempColor = function(temp?: string) {
+    if (temp === 'hot') return 'bg-red-100 text-red-700 border-red-200';
+    if (temp === 'cold') return 'bg-blue-100 text-blue-700 border-blue-200';
+    return 'bg-amber-100 text-amber-700 border-amber-200';
   };
 
-  const getStatusBorderColor = (lead: Lead) => {
+  var getStatusBorderColor = function(lead: Lead) {
     if (lead.next_action_date && isOverdue(lead.next_action_date)) return 'border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.25)]';
-    switch (lead.status) {
-      case LeadStatus.TECHNICAL_VISIT: return 'border-blue-400';
-      case LeadStatus.BRIEFING: return 'border-amber-400';
-      case LeadStatus.SIGNED: return 'border-green-500';
-      default: return 'border-stone-200';
-    }
+    if (lead.status === LeadStatus.TECHNICAL_VISIT) return 'border-blue-400';
+    if (lead.status === LeadStatus.BRIEFING) return 'border-amber-400';
+    if (lead.status === LeadStatus.SIGNED) return 'border-green-500';
+    return 'border-stone-200';
   };
 
-  const columnTotal = (status: string) =>
-    leads.filter(l => l.status === status).reduce((sum, l) => sum + (Number(l.budget) || 0), 0);
+  var columnTotal = function(status: string) {
+    return leads.filter(function(l) { return l.status === status; }).reduce(function(sum, l) { return sum + (Number(l.budget) || 0); }, 0);
+  };
 
-  const handleDragStart = (e: React.DragEvent, id: string) => {
+  var handleDragStart = function(e: React.DragEvent, id: string) {
     setDraggedLeadId(id);
     e.dataTransfer.setData('leadId', id);
   };
 
-  const handleDragOver = (e: React.DragEvent, status: string) => {
+  var handleDragOver = function(e: React.DragEvent, status: string) {
     e.preventDefault();
     if (dragOverStatus !== status) setDragOverStatus(status);
   };
 
-  const handleDrop = async (e: React.DragEvent, newStatus: string) => {
+  var handleDrop = async function(e: React.DragEvent, newStatus: string) {
     e.preventDefault();
-    const id = e.dataTransfer.getData('leadId') || draggedLeadId;
+    var id = e.dataTransfer.getData('leadId') || draggedLeadId;
     if (id) {
       if (newStatus === 'LOST') {
         setLeadToLoseId(id);
         setIsLossModalOpen(true);
       } else {
-        setLeads(prev => prev.map(l => l.id === id ? { ...l, status: newStatus } : l));
+        setLeads(function(prev) { return prev.map(function(l) { return l.id === id ? { ...l, status: newStatus } : l; }); });
         await supabase.from('leads').update({ status: newStatus }).eq('id', id);
       }
     }
@@ -108,13 +101,13 @@ const CRM: React.FC = () => {
     setDragOverStatus(null);
   };
 
-  const handleOpenNewLead = () => {
+  var handleOpenNewLead = function() {
     setFormData({ name: '', email: '', phone: '', address: '', notes: '', source: 'Instagram', budget: '', temperature: 'warm', nextActionDate: '' });
     setIsEditing(false);
     setIsModalOpen(true);
   };
 
-  const handleEditLead = () => {
+  var handleEditLead = function() {
     if (!selectedLead) return;
     setFormData({
       name: selectedLead.name, email: selectedLead.email, phone: selectedLead.phone,
@@ -126,24 +119,24 @@ const CRM: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleLeadSubmit = async (e: React.FormEvent) => {
+  var handleLeadSubmit = async function(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    const payload = {
+    var payload = {
       name: formData.name, email: formData.email, phone: formData.phone,
       address: formData.address, notes: formData.notes, source: formData.source,
       budget: Number(formData.budget), temperature: formData.temperature,
       next_action_date: formData.nextActionDate || null,
     };
     if (isEditing && selectedLeadId) {
-      const { data } = await supabase.from('leads').update(payload).eq('id', selectedLeadId).select('*, tasks:lead_tasks(*)').single();
-      if (data) setLeads(prev => prev.map(l => l.id === selectedLeadId ? data as Lead : l));
-      sendMobileNotification("Lead Atualizado! 📝", `Cliente: ${formData.name}`);
+      var res = await supabase.from('leads').update(payload).eq('id', selectedLeadId).select('*, tasks:lead_tasks(*)').single();
+      if (res.data) setLeads(function(prev) { return prev.map(function(l) { return l.id === selectedLeadId ? res.data as Lead : l; }); });
+      sendMobileNotification("Lead Atualizado! 📝", "Cliente: " + formData.name);
     } else {
-      const { data } = await supabase.from('leads').insert({ ...payload, status: LeadStatus.PROSPECTION }).select('*, tasks:lead_tasks(*)').single();
-      if (data) {
-        setLeads(prev => [data as Lead, ...prev]);
-        sendMobileNotification("Novo Lead! 🚀", `Cliente: ${formData.name}\nValor: R$ ${Number(formData.budget).toLocaleString('pt-BR')}`);
+      var res2 = await supabase.from('leads').insert({ ...payload, status: LeadStatus.PROSPECTION }).select('*, tasks:lead_tasks(*)').single();
+      if (res2.data) {
+        setLeads(function(prev) { return [res2.data as Lead, ...prev]; });
+        sendMobileNotification("Novo Lead! 🚀", "Cliente: " + formData.name + "\nValor: R$ " + Number(formData.budget).toLocaleString('pt-BR'));
       }
     }
     setSaving(false);
@@ -151,11 +144,11 @@ const CRM: React.FC = () => {
     setIsEditing(false);
   };
 
-  const confirmLoss = async () => {
+  var confirmLoss = async function() {
     if (leadToLoseId) {
       await supabase.from('leads').delete().eq('id', leadToLoseId);
-      setLeads(prev => prev.filter(l => l.id !== leadToLoseId));
-      sendMobileNotification("Lead Perdido ⚠️", `Motivo: ${lossReason}`);
+      setLeads(function(prev) { return prev.filter(function(l) { return l.id !== leadToLoseId; }); });
+      sendMobileNotification("Lead Perdido ⚠️", "Motivo: " + lossReason);
       setIsLossModalOpen(false);
       setLeadToLoseId(null);
       setLossReason('');
@@ -178,7 +171,7 @@ const CRM: React.FC = () => {
         <div>
           <h3 className="text-2xl font-bold text-stone-800 font-serif">Pipeline Comercial</h3>
           <p className="text-sm text-stone-500">
-            {leads.length} leads · R$ {leads.reduce((s, l) => s + (Number(l.budget) || 0), 0).toLocaleString('pt-BR')} em aberto
+            {leads.length} leads · R$ {leads.reduce(function(s, l) { return s + (Number(l.budget) || 0); }, 0).toLocaleString('pt-BR')} em aberto
           </p>
         </div>
         <button onClick={handleOpenNewLead} className="flex items-center gap-2 bg-stone-900 text-white px-5 py-2.5 rounded-xl hover:bg-stone-800 transition-all text-sm font-bold shadow-lg active:scale-95">
@@ -187,20 +180,20 @@ const CRM: React.FC = () => {
       </div>
 
       <div className="flex-1 overflow-x-auto pb-4 flex gap-6 custom-scrollbar min-h-[600px]">
-        {visibleStatuses.map(status => (
+        {STATUS_LIST.map(function(status) { return (
           <div
             key={status}
-            className={`flex-shrink-0 w-80 flex flex-col transition-all duration-300 ${dragOverStatus === status ? 'bg-stone-50 rounded-xl' : ''}`}
-            onDragOver={(e) => handleDragOver(e, status)}
-            onDrop={(e) => handleDrop(e, status)}
+            className={"flex-shrink-0 w-80 flex flex-col transition-all duration-300 " + (dragOverStatus === status ? 'bg-stone-50 rounded-xl' : '')}
+            onDragOver={function(e) { handleDragOver(e, status); }}
+            onDrop={function(e) { handleDrop(e, status); }}
           >
             <div className="flex items-center justify-between mb-1 px-2">
               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-500 flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full ${dragOverStatus === status ? 'bg-stone-900' : 'bg-stone-300'}`}></span>
+                <span className={"w-2 h-2 rounded-full " + (dragOverStatus === status ? 'bg-stone-900' : 'bg-stone-300')}></span>
                 {status}
               </h4>
               <span className="bg-stone-200/60 text-stone-600 text-[9px] font-black px-2.5 py-1 rounded-full">
-                {leads.filter(l => l.status === status).length}
+                {leads.filter(function(l) { return l.status === status; }).length}
               </span>
             </div>
             <div className="px-2 mb-3">
@@ -209,67 +202,67 @@ const CRM: React.FC = () => {
               </p>
             </div>
             <div className="flex-1 rounded-2xl p-3 space-y-3 bg-stone-100/30 border border-stone-100">
-              {leads.filter(l => l.status === status).map(lead => (
+              {leads.filter(function(l) { return l.status === status; }).map(function(lead) { return (
                 <div
                   key={lead.id}
                   draggable
-                  onDragStart={(e) => handleDragStart(e, lead.id)}
-                  onClick={() => setSelectedLeadId(lead.id)}
-                  className={`bg-white rounded-xl border p-4 shadow-sm hover:shadow-xl transition-all cursor-grab active:cursor-grabbing group relative border-l-4 ${getStatusBorderColor(lead)}`}
+                  onDragStart={function(e) { handleDragStart(e, lead.id); }}
+                  onClick={function() { setSelectedLeadId(lead.id); }}
+                  className={"bg-white rounded-xl border p-4 shadow-sm hover:shadow-xl transition-all cursor-grab active:cursor-grabbing group relative border-l-4 " + getStatusBorderColor(lead)}
                 >
                   {lead.next_action_date && isOverdue(lead.next_action_date) && (
                     <div className="absolute -top-2 -right-2 bg-red-600 text-white text-[9px] font-black px-2 py-1 rounded-full shadow-md animate-bounce z-10">ATRASADO</div>
                   )}
                   <div className="flex justify-between items-start mb-3">
                     <h5 className="font-bold text-stone-800 text-[15px] leading-tight">{lead.name}</h5>
-                    <button onClick={(e) => { e.stopPropagation(); window.open(`https://wa.me/55${lead.phone.replace(/\D/g,'')}`, '_blank'); }} className="text-green-600 hover:text-green-700 hover:scale-110 transition-transform p-1 bg-green-50 rounded-full">
+                    <button onClick={function(e) { e.stopPropagation(); window.open('https://wa.me/55' + lead.phone.replace(/\D/g,''), '_blank'); }} className="text-green-600 hover:text-green-700 hover:scale-110 transition-transform p-1 bg-green-50 rounded-full">
                       <Icons.WhatsApp />
                     </button>
                   </div>
                   <div className="flex items-center gap-2 mb-3">
-                    <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded border ${getTempColor(lead.temperature)}`}>
+                    <span className={"text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded border " + getTempColor(lead.temperature)}>
                       {lead.temperature === 'hot' ? 'Quente' : lead.temperature === 'warm' ? 'Morno' : 'Frio'}
                     </span>
                     <span className="text-[10px] text-stone-400 font-bold ml-auto">
-                      {lead.budget ? `R$ ${Number(lead.budget).toLocaleString('pt-BR')}` : '-'}
+                      {lead.budget ? 'R$ ' + Number(lead.budget).toLocaleString('pt-BR') : '-'}
                     </span>
                   </div>
                   {lead.next_action_date && (
-                    <div className={`mt-3 flex items-center gap-2 text-[10px] p-1.5 rounded ${isOverdue(lead.next_action_date) ? 'bg-red-50 text-red-600' : 'bg-stone-50 text-stone-500'}`}>
+                    <div className={"mt-3 flex items-center gap-2 text-[10px] p-1.5 rounded " + (isOverdue(lead.next_action_date) ? 'bg-red-50 text-red-600' : 'bg-stone-50 text-stone-500')}>
                       <Icons.Calendar />
                       <span className="font-bold">Próx:</span>
                       {new Date(lead.next_action_date + 'T12:00:00').toLocaleDateString('pt-BR')}
                     </div>
                   )}
                 </div>
-              ))}
+              ); })}
             </div>
           </div>
-        ))}
+        ); })}
       </div>
 
       {draggedLeadId && (
         <div
-          className={`absolute bottom-6 right-6 w-64 h-32 rounded-3xl border-2 border-dashed flex items-center justify-center transition-all duration-300 z-30 ${dragOverStatus === 'LOST' ? 'bg-red-100 border-red-500 scale-110 shadow-2xl' : 'bg-white/90 border-stone-300 backdrop-blur'}`}
-          onDragOver={(e) => handleDragOver(e, 'LOST')}
-          onDrop={(e) => handleDrop(e, 'LOST')}
+          className={"absolute bottom-6 right-6 w-64 h-32 rounded-3xl border-2 border-dashed flex items-center justify-center transition-all duration-300 z-30 " + (dragOverStatus === 'LOST' ? 'bg-red-100 border-red-500 scale-110 shadow-2xl' : 'bg-white/90 border-stone-300 backdrop-blur')}
+          onDragOver={function(e) { handleDragOver(e, 'LOST'); }}
+          onDrop={function(e) { handleDrop(e, 'LOST'); }}
         >
           <div className="text-center pointer-events-none flex flex-col items-center">
-            <div className={`mb-2 ${dragOverStatus === 'LOST' ? 'text-red-600' : 'text-stone-400'}`}><Icons.Trash /></div>
-            <p className={`text-[10px] font-black uppercase tracking-widest ${dragOverStatus === 'LOST' ? 'text-red-700' : 'text-stone-400'}`}>Descartar / Perda</p>
+            <div className={"mb-2 " + (dragOverStatus === 'LOST' ? 'text-red-600' : 'text-stone-400')}><Icons.Trash /></div>
+            <p className={"text-[10px] font-black uppercase tracking-widest " + (dragOverStatus === 'LOST' ? 'text-red-700' : 'text-stone-400')}>Descartar / Perda</p>
           </div>
         </div>
       )}
 
       {selectedLead && (
         <div className="fixed inset-0 z-[60] flex justify-end">
-          <div className="absolute inset-0 bg-stone-900/30 backdrop-blur-sm" onClick={() => setSelectedLeadId(null)}></div>
+          <div className="absolute inset-0 bg-stone-900/30 backdrop-blur-sm" onClick={function() { setSelectedLeadId(null); }}></div>
           <div className="relative w-full max-w-2xl bg-white h-full shadow-2xl animate-slideRight flex flex-col overflow-y-auto pt-24">
             <div className="p-8 border-b border-stone-100 flex justify-between items-center bg-stone-50">
               <div>
                 <h2 className="text-3xl font-serif font-bold text-stone-900">{selectedLead.name}</h2>
                 <div className="flex items-center gap-3 mt-2">
-                  <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest ${getTempColor(selectedLead.temperature)}`}>
+                  <span className={"px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest " + getTempColor(selectedLead.temperature)}>
                     {selectedLead.temperature === 'hot' ? '🔥 Quente' : selectedLead.temperature === 'warm' ? '☀️ Morno' : '❄️ Frio'}
                   </span>
                   <span className="text-xs font-bold text-stone-400">{selectedLead.status}</span>
@@ -279,15 +272,15 @@ const CRM: React.FC = () => {
                 <button onClick={handleEditLead} className="flex items-center gap-1.5 px-4 py-2 bg-stone-200 text-stone-700 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-stone-300 transition-colors">
                   <Icons.Pencil /> Editar
                 </button>
-                <button onClick={() => setSelectedLeadId(null)} className="p-2 hover:bg-stone-200 rounded-full transition-colors text-stone-500">✕</button>
+                <button onClick={function() { setSelectedLeadId(null); }} className="p-2 hover:bg-stone-200 rounded-full transition-colors text-stone-500">✕</button>
               </div>
             </div>
             <div className="p-8 space-y-8">
               <div className="grid grid-cols-2 gap-4">
-                <button onClick={() => window.open(`https://wa.me/55${selectedLead.phone.replace(/\D/g,'')}`, '_blank')} className="py-4 bg-green-50 text-green-700 border border-green-200 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-green-100 transition-all flex items-center justify-center gap-2">
+                <button onClick={function() { window.open('https://wa.me/55' + selectedLead.phone.replace(/\D/g,''), '_blank'); }} className="py-4 bg-green-50 text-green-700 border border-green-200 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-green-100 transition-all flex items-center justify-center gap-2">
                   <Icons.WhatsApp /> WhatsApp
                 </button>
-                <button onClick={() => setIsProposalOpen(true)} className="py-4 bg-stone-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-stone-800 transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2">
+                <button onClick={function() { setIsProposalOpen(true); }} className="py-4 bg-stone-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-stone-800 transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2">
                   <span className="text-lg">📄</span> Gerar Proposta
                 </button>
               </div>
@@ -333,11 +326,7 @@ const CRM: React.FC = () => {
       )}
 
       {selectedLead && (
-        <ProposalGenerator
-          isOpen={isProposalOpen}
-          onClose={() => setIsProposalOpen(false)}
-          lead={{ name: selectedLead.name, email: selectedLead.email, budget: Number(selectedLead.budget) || 0, notes: selectedLead.notes, address: selectedLead.address }}
-        />
+        <ProposalGenerator isOpen={isProposalOpen} onClose={function() { setIsProposalOpen(false); }} lead={{ name: selectedLead.name, email: selectedLead.email, budget: Number(selectedLead.budget) || 0, notes: selectedLead.notes, address: selectedLead.address }} />
       )}
 
       {isModalOpen && (
@@ -345,29 +334,29 @@ const CRM: React.FC = () => {
           <div className="bg-white w-full max-w-lg rounded-[30px] shadow-2xl overflow-hidden animate-slideUp">
             <div className="p-8 border-b border-stone-100 flex justify-between items-center">
               <h4 className="text-2xl font-bold font-serif">{isEditing ? 'Editar Lead' : 'Novo Lead'}</h4>
-              <button onClick={() => setIsModalOpen(false)} className="text-stone-400 hover:text-stone-900 font-bold">✕</button>
+              <button onClick={function() { setIsModalOpen(false); }} className="text-stone-400 hover:text-stone-900 font-bold">✕</button>
             </div>
             <form onSubmit={handleLeadSubmit} className="p-8 space-y-4 max-h-[80vh] overflow-y-auto">
-              <input required placeholder="Nome do Cliente" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200 outline-none focus:border-stone-900 transition-colors" />
+              <input required placeholder="Nome do Cliente" value={formData.name} onChange={function(e) { setFormData({...formData, name: e.target.value}); }} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200 outline-none focus:border-stone-900 transition-colors" />
               <div className="grid grid-cols-2 gap-4">
-                <input placeholder="WhatsApp (apenas números)" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200 outline-none focus:border-stone-900 transition-colors" />
-                <input type="email" placeholder="Email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200 outline-none focus:border-stone-900 transition-colors" />
+                <input placeholder="WhatsApp (apenas números)" value={formData.phone} onChange={function(e) { setFormData({...formData, phone: e.target.value}); }} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200 outline-none focus:border-stone-900 transition-colors" />
+                <input type="email" placeholder="Email" value={formData.email} onChange={function(e) { setFormData({...formData, email: e.target.value}); }} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200 outline-none focus:border-stone-900 transition-colors" />
               </div>
-              <input placeholder="Endereço / Local da Obra" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200 outline-none focus:border-stone-900 transition-colors" />
+              <input placeholder="Endereço / Local da Obra" value={formData.address} onChange={function(e) { setFormData({...formData, address: e.target.value}); }} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200 outline-none focus:border-stone-900 transition-colors" />
               <div className="grid grid-cols-2 gap-4">
-                <select value={formData.source} onChange={e => setFormData({...formData, source: e.target.value})} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200 text-stone-600 outline-none focus:border-stone-900">
+                <select value={formData.source} onChange={function(e) { setFormData({...formData, source: e.target.value}); }} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200 text-stone-600 outline-none focus:border-stone-900">
                   <option value="Instagram">Instagram</option>
                   <option value="Google">Google / Site</option>
                   <option value="Indicação">Indicação</option>
                   <option value="Pinterest">Pinterest</option>
                   <option value="Outros">Outros</option>
                 </select>
-                <input type="number" placeholder="Budget (R$)" value={formData.budget} onChange={e => setFormData({...formData, budget: e.target.value})} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200 outline-none focus:border-stone-900 transition-colors" />
+                <input type="number" placeholder="Budget (R$)" value={formData.budget} onChange={function(e) { setFormData({...formData, budget: e.target.value}); }} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200 outline-none focus:border-stone-900 transition-colors" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[10px] uppercase font-bold text-stone-400 ml-1">Temperatura</label>
-                  <select value={formData.temperature} onChange={e => setFormData({...formData, temperature: e.target.value as LeadTemperature})} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200 font-bold text-stone-700 outline-none focus:border-stone-900">
+                  <select value={formData.temperature} onChange={function(e) { setFormData({...formData, temperature: e.target.value}); }} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200 font-bold text-stone-700 outline-none focus:border-stone-900">
                     <option value="hot">🔥 Quente</option>
                     <option value="warm">☀️ Morno</option>
                     <option value="cold">❄️ Frio</option>
@@ -375,10 +364,10 @@ const CRM: React.FC = () => {
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] uppercase font-bold text-stone-400 ml-1">Próximo Passo</label>
-                  <input required type="date" value={formData.nextActionDate} onChange={e => setFormData({...formData, nextActionDate: e.target.value})} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200 outline-none focus:border-stone-900" />
+                  <input required type="date" value={formData.nextActionDate} onChange={function(e) { setFormData({...formData, nextActionDate: e.target.value}); }} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200 outline-none focus:border-stone-900" />
                 </div>
               </div>
-              <textarea placeholder="Notas sobre o projeto..." value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200 h-24 resize-none outline-none focus:border-stone-900" />
+              <textarea placeholder="Notas sobre o projeto..." value={formData.notes} onChange={function(e) { setFormData({...formData, notes: e.target.value}); }} className="w-full p-3 bg-stone-50 rounded-xl border border-stone-200 h-24 resize-none outline-none focus:border-stone-900" />
               <button type="submit" disabled={saving} className="w-full py-4 bg-stone-900 text-white font-bold rounded-xl uppercase tracking-widest text-xs hover:bg-stone-800 transition-all shadow-xl active:scale-95 flex items-center justify-center gap-2">
                 {saving ? <><Icons.Spinner /> Salvando...</> : (isEditing ? 'Salvar Alterações' : 'Cadastrar Lead')}
               </button>
@@ -393,14 +382,14 @@ const CRM: React.FC = () => {
             <h4 className="text-xl font-bold text-stone-800 mb-2 font-serif">Confirmar Perda</h4>
             <p className="text-xs text-stone-500 mb-6">Por que este negócio não fechou?</p>
             <div className="space-y-3 mb-8">
-              {['Preço muito alto', 'Concorrência', 'Desistiu do Projeto', 'Sem Contato'].map(reason => (
-                <button key={reason} onClick={() => setLossReason(reason)} className={`w-full p-3 rounded-xl text-xs font-bold border-2 transition-all ${lossReason === reason ? 'border-stone-900 bg-stone-900 text-white' : 'border-stone-100 bg-stone-50 text-stone-600'}`}>
+              {['Preço muito alto', 'Concorrência', 'Desistiu do Projeto', 'Sem Contato'].map(function(reason) { return (
+                <button key={reason} onClick={function() { setLossReason(reason); }} className={"w-full p-3 rounded-xl text-xs font-bold border-2 transition-all " + (lossReason === reason ? 'border-stone-900 bg-stone-900 text-white' : 'border-stone-100 bg-stone-50 text-stone-600')}>
                   {reason}
                 </button>
-              ))}
+              ); })}
             </div>
             <button onClick={confirmLoss} className="w-full py-4 bg-red-600 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl hover:bg-red-700 transition-all">Confirmar</button>
-            <button onClick={() => setIsLossModalOpen(false)} className="w-full mt-3 text-stone-400 text-[10px] font-bold uppercase tracking-widest">Cancelar</button>
+            <button onClick={function() { setIsLossModalOpen(false); }} className="w-full mt-3 text-stone-400 text-[10px] font-bold uppercase tracking-widest">Cancelar</button>
           </div>
         </div>
       )}
