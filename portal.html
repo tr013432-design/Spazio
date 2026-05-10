@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal do Cliente | Spazio Arquitetura</title>
+<meta name="theme-color" content="#1c1917">
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+body{font-family:'DM Sans',sans-serif;margin:0}
+h1,h2,h3,.font-serif{font-family:'Playfair Display',serif}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.anim-fade{animation:fadeIn .4s ease-out forwards}
+.anim-up{animation:slideUp .5s cubic-bezier(.16,1,.3,1) forwards}
+</style>
+
+<script type="importmap">
+{
+  "imports": {
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.49.8"
+  }
+}
+</script>
+</head>
+<body class="bg-stone-50">
+
+<script type="module">
+import { createClient } from '@supabase/supabase-js';
+
+var db = createClient(
+  'https://dkiusfegnudxyggurmxy.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRraXVzZmVnbnVkeHlnZ3VybXh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyODkyODgsImV4cCI6MjA5Mzg2NTI4OH0.pXtGnSK60f-hr8E8BstMSoeq1qHslKU9GK0QjL1DHeg'
+);
+
+// Pega o token da URL: /portal.html?token=abc123
+var urlParams = new URLSearchParams(window.location.search);
+var token = urlParams.get('token');
+
+var app = document.getElementById('app');
+
+if (!token) {
+  app.innerHTML = `
+    <div class="min-h-screen flex items-center justify-center p-6">
+      <div class="max-w-md w-full bg-white rounded-3xl shadow-2xl p-10 text-center anim-up">
+        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+        </div>
+        <h1 class="text-2xl font-serif font-bold text-stone-900 mb-3">Acesso Negado</h1>
+        <p class="text-stone-600 text-sm">Token de acesso não encontrado. Verifique o link que você recebeu.</p>
+        <div class="mt-8 pt-6 border-t border-stone-100">
+          <p class="text-xs text-stone-400 uppercase tracking-widest font-bold">SPAZIO ARQUITETURA</p>
+        </div>
+      </div>
+    </div>
+  `;
+} else {
+  loadPortal(token);
+}
+
+async function loadPortal(accessToken) {
+  app.innerHTML = `
+    <div class="min-h-screen flex items-center justify-center">
+      <div class="text-center">
+        <svg class="w-8 h-8 animate-spin text-stone-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+        </svg>
+        <p class="text-xs font-bold uppercase tracking-widest text-stone-400">Carregando seu projeto...</p>
+      </div>
+    </div>
+  `;
+
+  // Busca acesso
+  var accessRes = await db.from('client_access')
+    .select('*, project:projects(*, daily_logs(*))')
+    .eq('access_token', accessToken)
+    .single();
+
+  if (accessRes.error || !accessRes.data) {
+    app.innerHTML = `
+      <div class="min-h-screen flex items-center justify-center p-6">
+        <div class="max-w-md w-full bg-white rounded-3xl shadow-2xl p-10 text-center anim-up">
+          <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+          </div>
+          <h1 class="text-2xl font-serif font-bold text-stone-900 mb-3">Token Inválido</h1>
+          <p class="text-stone-600 text-sm">Este link de acesso não é válido ou expirou. Entre em contato com a Spazio Arquitetura.</p>
+          <div class="mt-8 pt-6 border-t border-stone-100">
+            <p class="text-xs text-stone-400 uppercase tracking-widest font-bold">SPAZIO ARQUITETURA</p>
+          </div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  var access = accessRes.data;
+  var project = access.project;
+  var logs = (project.daily_logs || []).sort((a, b) => new Date(b.log_date) - new Date(a.log_date));
+
+  // Calcula progresso
+  var stageIndex = ['Briefing', 'Anteprojeto', 'Executivo', 'Obra', 'Entrega'].indexOf(project.stage);
+  var progress = stageIndex >= 0 ? Math.round(((stageIndex + 1) / 5) * 100) : 0;
+
+  app.innerHTML = `
+    <div class="min-h-screen bg-gradient-to-br from-stone-50 to-stone-100">
+      <!-- Header -->
+      <header class="bg-white/90 backdrop-blur-md border-b border-stone-200 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-6 py-6 flex justify-between items-center">
+          <div>
+            <h1 class="text-2xl font-serif font-black tracking-tight">
+              SPAZIO<span class="text-stone-400 font-light">ARQUITETURA</span>
+            </h1>
+            <p class="text-[9px] uppercase tracking-[0.3em] text-stone-500 font-black mt-0.5">Elite Management</p>
+          </div>
+          <div class="text-right">
+            <p class="text-xs font-bold text-stone-400 uppercase tracking-widest">Bem-vindo</p>
+            <p class="text-sm font-bold text-stone-800">${access.client_name}</p>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="max-w-6xl mx-auto px-6 py-10 space-y-8 anim-fade">
+        
+        <!-- Project Header -->
+        <div class="bg-white rounded-3xl shadow-lg overflow-hidden border border-stone-200">
+          ${project.cover_image_url ? `
+            <div class="h-64 overflow-hidden bg-stone-100">
+              <img src="${project.cover_image_url}" class="w-full h-full object-cover" alt="Capa do projeto">
+            </div>
+          ` : ''}
+          <div class="p-8 md:p-12">
+            <div class="flex justify-between items-start flex-wrap gap-4 mb-8">
+              <div>
+                <h2 class="text-4xl font-serif font-bold text-stone-900 mb-2">${project.title}</h2>
+                <p class="text-stone-500 text-lg">Seu projeto com a Spazio Arquitetura</p>
+              </div>
+              <div class="px-4 py-2 rounded-xl border-2 ${project.stage === 'Entrega' ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'}">
+                <p class="text-[10px] font-black uppercase tracking-widest ${project.stage === 'Entrega' ? 'text-green-700' : 'text-blue-700'}">${project.stage}</p>
+              </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="mb-6">
+              <div class="flex justify-between items-center mb-2">
+                <p class="text-xs font-bold uppercase tracking-widest text-stone-400">Progresso do Projeto</p>
+                <p class="text-sm font-bold text-stone-800">${progress}%</p>
+              </div>
+              <div class="w-full h-3 bg-stone-100 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-stone-800 to-stone-600 rounded-full transition-all duration-1000" style="width: ${progress}%"></div>
+              </div>
+            </div>
+
+            <!-- Timeline Horizontal -->
+            <div class="flex justify-between items-center relative mt-10 overflow-x-auto pb-4">
+              <div class="absolute top-1/2 left-0 right-0 h-0.5 bg-stone-200 -z-10"></div>
+              ${['Briefing', 'Anteprojeto', 'Executivo', 'Obra', 'Entrega'].map((stage, i) => {
+                var done = i < stageIndex;
+                var current = i === stageIndex;
+                return `
+                  <div class="flex flex-col items-center gap-2 bg-white px-3 flex-shrink-0">
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center border-2 ${done ? 'bg-stone-900 border-stone-900 text-white' : current ? 'bg-white border-stone-900 text-stone-900 scale-125 shadow-lg' : 'bg-stone-50 border-stone-200 text-stone-300'}">
+                      ${done ? '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>' : current ? '<div class="w-3 h-3 bg-stone-900 rounded-full animate-pulse"></div>' : '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>'}
+                    </div>
+                    <p class="text-[9px] font-black uppercase tracking-widest ${current ? 'text-stone-900' : 'text-stone-400'}">${stage}</p>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+
+        <!-- Diário de Obra -->
+        <div class="bg-white rounded-3xl shadow-lg p-8 md:p-12 border border-stone-200">
+          <div class="flex items-center gap-3 mb-8">
+            <svg class="w-6 h-6 text-stone-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <h3 class="text-2xl font-serif font-bold text-stone-900">Diário de Obra</h3>
+          </div>
+
+          ${logs.length === 0 ? `
+            <div class="text-center py-16 border-2 border-dashed border-stone-200 rounded-2xl">
+              <svg class="w-12 h-12 text-stone-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              <p class="text-sm text-stone-500">Nenhum registro ainda. Atualizações serão publicadas em breve.</p>
+            </div>
+          ` : `
+            <div class="space-y-6">
+              ${logs.map(log => `
+                <div class="bg-stone-50 rounded-2xl p-6 border border-stone-100 hover:shadow-md transition-shadow anim-up">
+                  <div class="flex items-start gap-6">
+                    ${log.image_url ? `
+                      <div class="w-32 h-32 rounded-xl overflow-hidden bg-stone-200 flex-shrink-0">
+                        <img src="${log.image_url}" class="w-full h-full object-cover" alt="Registro">
+                      </div>
+                    ` : `
+                      <div class="w-32 h-32 rounded-xl bg-stone-200 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-8 h-8 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                        </svg>
+                      </div>
+                    `}
+                    <div class="flex-1">
+                      <div class="flex items-center gap-3 mb-3">
+                        <svg class="w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        <p class="text-xs font-black uppercase tracking-widest text-stone-400">
+                          ${new Date(log.log_date + 'T12:00:00').toLocaleDateString('pt-BR', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'})}
+                        </p>
+                      </div>
+                      <p class="text-stone-700 leading-relaxed font-serif italic text-lg">"${log.content}"</p>
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `}
+        </div>
+
+        <!-- Info Footer -->
+        <div class="bg-white rounded-3xl shadow-lg p-8 border border-stone-200 text-center">
+          <p class="text-xs text-stone-500 mb-3">Dúvidas sobre o andamento do seu projeto?</p>
+          <a href="https://wa.me/5521999999999" target="_blank" class="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-green-700 transition-all shadow-lg active:scale-95">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+            </svg>
+            Falar com a Spazio
+          </a>
+          <div class="mt-8 pt-6 border-t border-stone-100">
+            <p class="text-[10px] text-stone-400 uppercase tracking-widest font-black">SPAZIO ARQUITETURA — ELITE MANAGEMENT</p>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  `;
+}
+</script>
+
+<div id="app"></div>
+
+</body>
+</html>
